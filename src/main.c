@@ -1,32 +1,47 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include "./util.h"
 
-
-int _putchar(char c) {
-	
-	if(!c) 
-		return 0;	
-	return (write(1, &c, 1));
+char **splitbydelim(char *command, char delim) {
+	return ();
 }
 
-int _strlen(char *s) {
-	if(!s) 
-		return 0;
-	
-	int len = 0;
-
-	for(; *s++;len++);
-	
-	return len;
-}
-
+// TODO: Make util function lib.
+// TODO: Create Main Shell Loop.
+// TODO: Create hash table for commands.
 int main() {
-	char s[] = "2021";
-	int len = _strlen(s);
-	printf("%s -> %i\n", s, len);
+	int cap  = 25;
+	int size = 0;
+	int run = 1;
+	char c;	
+	char buff[cap];
+	
+	while(run)
+	{
+		_puts("[C-SHEL] > ");
+
+		while((c = getchar()) != '\n' && c != EOF) {
+			buff[size++] = (char) c;		
+		}
+		
+		buff[size++] = '\0';
+		_puts(buff);
+		_puts("\n");
+
+		if(_strcmp(buff, "exit") == 1) 
+		{
+			_puts("exiting..\n");
+			run = 0;
+		}
+
+	
+
+	}
+
 	return 0;
 }
+
+
+
+
+
 
 

@@ -1,5 +1,5 @@
 @echo off
-gcc -o .\bin\main.exe main.c && .\bin\main.exe
+gcc -Wall -Werror -Wextra -pedantic -std=c11 *.c -o .\bin\main.exe && .\bin\main.exe 
 
 
 
