@@ -9,21 +9,25 @@ int _putchar(char c) {
 
 int _strlen(char *s) {
 	
-	if(!s) 
+	int len = 0;
+	
+	if(!s) {
 		return 0;
+	}
 	
-	int len;
-	
-	for(len = 0; *s++;len++);
+	while(*s++) {
+		len++;
+	}
 	
 	return len;
 }
 
 int _puts(char *s) {
-	if(!s) return 0;
 	
 	int n = 0;
-	
+
+	if(!s) return 0;
+
 	while(s[n]) _putchar(s[n++]);
 	
 	return n;
@@ -63,8 +67,27 @@ int  _strcmp(char *s1, char *s2) {
 	return 0;
 }
 
+int read_command(char *buff) {
+	
+	int c, size = 0;
+	_puts("$$$ ");
+	
+	while((c = getchar()) != '\n' && c != EOF)
+	{
+		
+		if(BUFF_MAX == size + 1) {
+			/* TODO: Realloc. */
+			_puts("LIMIT BUFFER");
+			exit(-1);
+		}
+
+		buff[size++] = (char) c;
+	}
+
+	return size;
+}
 
 
-
-
-
+void prompt() {
+	_puts("[C-SHEL] > ");
+}
