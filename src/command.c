@@ -1,8 +1,5 @@
 #include "command.h"
 
-extern char **environ;
-
-
 Command *alloc_cmd(int cap) {
 	
 	Command *cmd = malloc(sizeof(Command));
@@ -73,21 +70,20 @@ void print_command(Command *c) {
 
 }
 
-void commands_exec(Command *cmd) {
+void commands_exec(Command *cmd, char *env[]) {
 	
-	int pid, code = 0;	
-	
-	 /* signal(SIGQUIT, handle_signal); Sync */
 
+	int pid, code = 0;
+	
+	/* signal(SIGQUIT, handle_signal); Sync */
+	
 	pid = fork();
-
-
 	if(pid == 0)
 	{
 		/* Child Process. */
 		
 		_putchar('\n');
-		code = execve(cmd->name, cmd->args, environ);
+		code = execve(cmd->name, cmd->args, env);
 	
 		if(code == -1) 
 		{

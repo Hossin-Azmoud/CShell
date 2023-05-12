@@ -25,7 +25,7 @@ int  get_tokenized_path(char **paths);
 char *join_path(char *dst, char *src);
 char **allocate_char_grid(int row, int col);
 void free_char_grid(char **grid, int row);
-
+void print_env(char *envp[]);
 
 #endif /* __UTIL__H */
 

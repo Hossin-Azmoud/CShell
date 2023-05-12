@@ -1,10 +1,11 @@
 #include "command.h"
+
 void test();
 int shell();
 
-int main() {
+int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[], char *envp[]) {
 	printf("Started\n");
-	shell();
+	shell(envp);
 	return 0;
 }
 
@@ -28,14 +29,15 @@ void test() {
 	free_char_grid(xs, BUFF_MAX);
 }
 
-int shell() {
+int shell(char *envp[]) {
+	
 	int size = 0;
 	int run = 1;
 	char     *buff;
 	Command  *cmd;
 	
-    char **ENV_PATHS      = allocate_char_grid(BUFF_MAX, BUFF_MAX);
-    int  ENV_PATHS_SIZE   = get_tokenized_path(ENV_PATHS);
+    char **ENV_PATHS    = allocate_char_grid(BUFF_MAX, BUFF_MAX);
+    int  ENV_PATHS_SIZE = get_tokenized_path(ENV_PATHS);
 
 	while(run) 
 	{
@@ -57,9 +59,15 @@ int shell() {
 				continue;
 			}
 
+			if(_strcmp(cmd->name, "env"))
+			{
+				print_env(envp);
+				continue;
+			}
+
 			if(find_cmd(cmd, ENV_PATHS, ENV_PATHS_SIZE) == 0) 
 			{
-				commands_exec(cmd);
+				commands_exec(cmd, envp);
 				_puts("\n");
 				continue;
 			}
