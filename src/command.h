@@ -4,9 +4,8 @@
 
 #include <string.h>
 #include <sys/wait.h>
+#include <signal.h>
 #include "util.h"
-
-
 
 typedef struct {
 	char *name;
@@ -15,14 +14,10 @@ typedef struct {
 	int   size;
 } Command;
 
-char      *command_read(Command *cmd);
-int       command_write(Command *cmd);
-
-void      commands_exec(Command *cmd);
-
-void      parse_cmd(char *chunk, Command *cmd);
-
-Command   *alloc_cmd(int cap);
-void      print_command(Command *c);
-
+void    commands_exec(Command *cmd);
+void    parse_cmd(char *chunk, Command *cmd);
+Command *alloc_cmd(int cap);
+void    print_command(Command *c);
+int     find_cmd(Command *c, char **paths, int size);
+void    free_command(Command *c);
 #endif /* _COMMAND_H */
