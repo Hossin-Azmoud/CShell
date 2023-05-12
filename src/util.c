@@ -97,20 +97,25 @@ int  _strcmp(char *s1, char *s2) {
 	return 0;
 }
 
-int read_command(char *buff) {
+int read_command(char *buff, FILE *Stream, int cap) {
 	int c, size = 0;
+	char *tmp;
 
-	while((c = getc(stdin)) != '\n')
+	while((c = getc(Stream)) != '\n')
 	{
 		
-		if(BUFF_MAX == size + 1) {
-			/* TODO: Realloc. */
-			exit(1);
-		}
-
+	
 		if(c == EOF) {
 			exit(1);
 		};
+
+		if(cap == size + 1) {
+			tmp  = malloc(cap + BUFF_MAX);
+			cap  = cap + BUFF_MAX;
+			_strcpy(tmp, buff);
+			buff = tmp;
+		}
+
 
 		buff[size++] = (char) c;
 	}
@@ -205,8 +210,10 @@ int get_tokenized_path(char **paths)
 }
 
 void print_env(char *envp[]) {
+	
 	while(*envp++){
 		_puts(*envp);
 		_putchar('\n');
 	}
+
 }

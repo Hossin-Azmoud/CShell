@@ -46,14 +46,13 @@ int shell(char *envp[]) {
 		
 		prompt();
 
-		size = read_command(buff);
+		size = read_command(buff, stdin, BUFF_MAX);
 		
 		if(size > 1) {
 				
 			parse_cmd(buff, cmd);
 			
-			if(_strcmp(cmd->name, "exit"))
-			{
+			if(_strcmp(cmd->name, "exit")) {
 				_puts("exiting..\n");
 				run  = 0;
 				continue;
