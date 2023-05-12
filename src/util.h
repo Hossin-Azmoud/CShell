@@ -23,6 +23,7 @@ char  *join_path(char *dst, char *src);
 char  **allocate_char_grid(int row, int col);
 void  free_char_grid(char **grid, int row);
 void  print_env(char *envp[]);
+char *_realloc(char *ptr, int size);
 
 #endif /* __UTIL__H */
 

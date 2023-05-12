@@ -22,6 +22,23 @@ int _strlen(char *s) {
 	return len;
 }
 
+char *_realloc(char *ptr, int size) {
+	char *new = malloc(size);
+
+	if(new == NULL) {
+		return NULL;
+	}
+	
+	while(*ptr)
+	{
+		*ptr++ = *new++;
+	}
+
+	free(ptr);
+	
+	return new;
+}
+
 int _puts(char *s) {
 	
 	int n = 0;
@@ -99,7 +116,6 @@ int  _strcmp(char *s1, char *s2) {
 
 int read_command(char *buff, FILE *Stream, int cap) {
 	int c, size = 0;
-	char *tmp;
 
 	while((c = getc(Stream)) != '\n')
 	{
@@ -110,10 +126,8 @@ int read_command(char *buff, FILE *Stream, int cap) {
 		};
 
 		if(cap == size + 1) {
-			tmp  = malloc(cap + BUFF_MAX);
-			cap  = cap + BUFF_MAX;
-			_strcpy(tmp, buff);
-			buff = tmp;
+			buff = _realloc(buff, size + 1);
+			cap += 1;
 		}
 
 
