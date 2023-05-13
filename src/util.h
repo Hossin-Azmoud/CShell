@@ -3,8 +3,6 @@
 
 #include "_string.h"
 
-static char **environ;
-
 void prompt();
 char *getpath();
 int  get_tokenized_path(char **paths);

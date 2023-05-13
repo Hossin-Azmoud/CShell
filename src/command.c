@@ -1,6 +1,7 @@
 #include "command.h"
 
-static built_in_command *built_ins;
+static built_in_command built_ins[BUILT_INS_COUNT] = { 0 };
+static char **environ;
 
 Command *alloc_cmd(int cap) 
 {
@@ -155,7 +156,8 @@ void built_in_env(Command *cmd) {
 
 void built_in_cd(Command *cmd) {
 	int res;
-
+	printf("Hello");
+	
 	if(cmd->size > 1)
 	{
 		_puts("CD WAS CALLED WITH: ");
@@ -188,25 +190,26 @@ int exec_builtin(Command *cmd) {
 	return 0;
 }
 
+built_in_command construct_built_in(char *name, void (*func)(Command *)) {
+	
+	built_in_command *command = malloc(sizeof(built_in_command));
+	
+	command->name = name;
+	command->func = func;
+
+	return *command;
+}
+
 
 void reg_built_ins() {
+	built_ins[0] = construct_built_in("exit", built_in_exit);
+	_puts("\n[0][REG] exit\n");
 	
+	built_ins[1] = construct_built_in("env", built_in_env);
+	_puts("[1][REG] env\n");
 	
-	built_ins = (built_in_command**) {
-		(built_in_command *) {
-			.name = "exit",
-			.func = built_in_exit,
-		},
-		(built_in_command *) {
-			.name = "env",
-			.func = built_in_env,
-		},
-		(built_in_command *) {
-			.name = "cd",
-			.func = built_in_cd,
-		}
-	};
-
+	built_ins[2] = construct_built_in("cd", built_in_cd);
+	_puts("[2][REG] cd\n\n");
 }
 
 

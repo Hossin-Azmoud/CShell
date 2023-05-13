@@ -31,9 +31,10 @@ int shell() {
 	int result = 0;
 	char     *buff;
 	Command  *cmd;
-	reg_built_ins();
     char **ENV_PATHS    = allocate_char_grid(BUFF_MAX, BUFF_MAX);
     int  ENV_PATHS_SIZE = get_tokenized_path(ENV_PATHS);
+
+    reg_built_ins();
 
 	while(run) 
 	{
