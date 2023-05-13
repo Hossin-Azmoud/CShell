@@ -1,16 +1,13 @@
 #include "command.h"
 
-Command *alloc_cmd(int cap) {
-	
-	Command *cmd = malloc(sizeof(Command));
-	
+Command *alloc_cmd(int cap) 
+{
+	Command *cmd = malloc(sizeof(Command));	
 	cmd->name    = (char*) malloc(cap);
 	cmd->args    = (char**) malloc(cap);
 	cmd->cap     = cap; 
-	cmd->size    = 0;
-	
+	cmd->size    = 0;	
 	return cmd;
-
 }
 
 
@@ -40,12 +37,11 @@ void parse_cmd(char *buff, Command *cmd) {
     	{
     		cmd->name = Token;
     	}
-    	
 
-    	
     	cmd->args[cmd->size++] = Token;
-
-        if(cmd->size == cmd->cap){
+        
+        if(cmd->size == cmd->cap) 
+        {
         	realloc_cmd(cmd); /* reallocate another.. */
         }
 
@@ -71,7 +67,6 @@ void print_command(Command *c) {
 }
 
 void commands_exec(Command *cmd, char *env[]) {
-	
 
 	int pid, code = 0;
 	
@@ -118,7 +113,8 @@ int find_cmd(Command *c, char **paths, int size) {
 		_strcpy(copy, paths[i]);
 		join_path(copy, c->name);
 		
-		if(access(copy , X_OK) != -1) {
+		if(access(copy , X_OK) != -1) 
+		{
 			c->name = copy;
 			return 0;
 		}
@@ -126,96 +122,3 @@ int find_cmd(Command *c, char **paths, int size) {
 
 	return 1; /* Not found */
 }
-
-#if 0
-
-Command *read_command() {
-	
-	int c, size, token_index;
-	char buff[BUFF_MAX];
-
-	Command *command = alloc_cmd(32);
-	
-	while((c = getchar()) != '\n' && c != EOF)
-	{
-		assert(BUFF_MAX > size && "BUFF LIMIT SURPASSED.");
-		
-		if(c == ' ') {
-			/* collect the component of the command. */
-			
-			if(size > 0) {
-				buff[size++] = '\0';
-				_strcpy(command->args[token_index], buff);
-				
-				if(token_index == 0) {
-					_strcpy(command->name, buff);
-				}
-
-				token_index++;
-				size = 0;
-			}
-		}
-
-		buff[size++] = (char) c;
-		/* TODO: Check if the buff is full and reallocate mem */
-	}
-
-	command->size = token_index;
-	print_command(command);
-	return command;
-}
-
-Command *read_command() {
-	
-	int c, size, token_index = 0;
-	char buff[BUFF_MAX];
-
-	Command *command = alloc_cmd(32);
-	_puts("test-shell$: ");
-	
-	while((c = getchar()) != '\n' && c != EOF)
-	{
-		assert(BUFF_MAX > size && "BUFF LIMIT SURPASSED.");
-		buff[size++] = (char) c;
-		/* TODO: Check if the buff is full and reallocate mem */
-	}
-
-	if(c == ' ')
-	{
-		/* collect the component of the command. */
-		if(size > 0) {
-			
-			buff[size++] = '\0';
-
-			_strcpy(command->args[token_index], buff);
-			
-			if(token_index == 0) {
-				_strcpy(command->name, buff);
-			}
-
-			token_index++;
-			size = 0;
-		}
-	}
-
-
-	command->size = token_index;
-	
-	print_command(command);
-	
-	return command;
-}
-
-static int recv_eof = 0;
-static int finished = 0;
-static void handle_signal(int sig){
-	
-	if(sig == SIGQUIT)
-	{
-		recv_eof = 1;
-		finished = 1;
-		exit(0);
-	}
-}
-0616981090
-#endif
