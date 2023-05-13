@@ -1,7 +1,7 @@
 #include "command.h"
 
 static built_in_command built_ins[BUILT_INS_COUNT] = { 0 };
-static char **environ;
+extern char **environ;
 
 Command *alloc_cmd(int cap) 
 {
@@ -141,14 +141,15 @@ void built_in_exit(Command *cmd) {
 	exit(0);
 }
 void built_in_env(Command *cmd) {
+	
 	if(cmd->size > 1)
 	{
 		_puts("ENV WAS CALLED WITH: ");
 		_puts(" args\n");
 	}
 
-	while(*environ++){
-		_puts(*environ);
+	while(*environ){
+		_puts(*environ++);
 		_putchar('\n');
 	}
 
@@ -175,8 +176,8 @@ void built_in_cd(Command *cmd) {
 }
 
 int exec_builtin(Command *cmd) {
-	int i = 0;
 	
+	int i = 0;	
 	for(i = 0; i < BUILT_INS_COUNT; ++i)
 	{
 		built_in_command command = built_ins[i];
@@ -199,7 +200,6 @@ built_in_command construct_built_in(char *name, void (*func)(Command *)) {
 
 	return *command;
 }
-
 
 void reg_built_ins() {
 	built_ins[0] = construct_built_in("exit", built_in_exit);
