@@ -12,10 +12,10 @@
 #define BUFF_MAX 128
 
 enum Key {
-	End_key = 23,
-	Left_key = 37,
-	Right_key = 39,
-	Backspace = 8
+	Left_key = 0x1b5b44,
+	Right_key = 0x1b5b43,
+	Down_key = 0x1b5b42,
+	Up_key = 0x1b5b41
 };
 
 int  _fputchar(char c, int Stream);

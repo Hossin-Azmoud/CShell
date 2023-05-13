@@ -1,5 +1,7 @@
 #include "command.h"
 
+static built_in_command *built_ins;
+
 Command *alloc_cmd(int cap) 
 {
 	Command *cmd = malloc(sizeof(Command));	
@@ -66,7 +68,7 @@ void print_command(Command *c) {
 
 }
 
-void commands_exec(Command *cmd, char *env[]) {
+void commands_exec(Command *cmd) {
 
 	int pid, code = 0;
 	
@@ -78,7 +80,7 @@ void commands_exec(Command *cmd, char *env[]) {
 		/* Child Process. */
 		
 		_putchar('\n');
-		code = execve(cmd->name, cmd->args, env);
+		code = execve(cmd->name, cmd->args, environ);
 	
 		if(code == -1) 
 		{
@@ -96,29 +98,117 @@ void commands_exec(Command *cmd, char *env[]) {
 }
 
 int find_cmd(Command *c, char **paths, int size) {
-	
-	
 	int i;
+	int res;
+	char *copy;
 	
+
 	if(size == 0) return 1;
 	
-	if(access(c->name, X_OK) != -1) {
+	res = access(c->name, X_OK); 
+	
+	if(res != -1) {
 		return 0;
 	}
 
 	for (i = 0; i < size; ++i) 
 	{
-		char *copy = malloc(_strlen(paths[i]) + 1);
-		
+		copy = malloc(_strlen(paths[i]) + 1);
 		_strcpy(copy, paths[i]);
 		join_path(copy, c->name);
 		
-		if(access(copy , X_OK) != -1) 
+		res = access(copy, X_OK);
+		
+		if(res != -1)
 		{
-			c->name = copy;
+			_strcpy(c->name, copy);
 			return 0;
 		}
 	}
 
 	return 1; /* Not found */
 }
+
+
+void built_in_exit(Command *cmd) {
+	if(cmd->size > 1)
+	{
+		_puts("EXIT WAS CALLED WITH: ");
+		_puts(" args\n");
+	}
+
+	exit(0);
+}
+void built_in_env(Command *cmd) {
+	if(cmd->size > 1)
+	{
+		_puts("ENV WAS CALLED WITH: ");
+		_puts(" args\n");
+	}
+
+	while(*environ++){
+		_puts(*environ);
+		_putchar('\n');
+	}
+
+}
+
+void built_in_cd(Command *cmd) {
+	int res;
+
+	if(cmd->size > 1)
+	{
+		_puts("CD WAS CALLED WITH: ");
+		_puts(" args\n");
+	}
+
+	res = chdir(cmd->args[1]);
+	
+	if (res != 0)
+	{
+		_puts(cmd->args[1]);
+		_putchar(' ');
+		perror(":");
+	}
+}
+
+int exec_builtin(Command *cmd) {
+	int i = 0;
+	
+	for(i = 0; i < BUILT_INS_COUNT; ++i)
+	{
+		built_in_command command = built_ins[i];
+		
+		if(_strcmp(command.name, cmd->name)) {
+			command.func(cmd);
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+
+void reg_built_ins() {
+	
+	
+	built_ins = (built_in_command**) {
+		(built_in_command *) {
+			.name = "exit",
+			.func = built_in_exit,
+		},
+		(built_in_command *) {
+			.name = "env",
+			.func = built_in_env,
+		},
+		(built_in_command *) {
+			.name = "cd",
+			.func = built_in_cd,
+		}
+	};
+
+}
+
+
+
+

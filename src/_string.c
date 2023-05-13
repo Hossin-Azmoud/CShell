@@ -17,11 +17,12 @@ int _strlen(char *s) {
 char *_strcpy(char *dst, char *src) {
 	
 	char *dst_start = dst;
+	
 	if(!dst) { 
 		return NULL;
 	}
 
-	while(*src)
+	while(*src != '\0')
 	{
 		*dst++ = *src++;
 	}
@@ -29,24 +30,42 @@ char *_strcpy(char *dst, char *src) {
 	*dst = '\0';
 	return dst_start;
 }
-
+/*
 char *_strcat(char *dst, char *src) {
-	/* mem alloc */
-	char *tmp = malloc( _strlen(dst) + _strlen(src) + 1 );
+
+	
 	char *dst_end;
 
-	_strcpy(tmp, dst);
-	
-	*dst = *tmp;
+	int sz  = _strlen(dst) + _strlen(src) + 1; 
+	dst     = _realloc(dst, sz);
+
 	dst_end = dst + _strlen(dst);
 	
-	while(*src) 
+	while(*src)
 	{
 		*dst_end++ = *src++;
 	}
 
 	*dst_end = '\0';
+	return dst;
+}
+*/
+
+char *_strcat(char *dst, char *src) 
+{
+	int sz  = _strlen(dst) + _strlen(src) + 1; 
+	int end = _strlen(dst);
 	
+	_realloc(dst, sz);
+	
+	while(*src)
+	{
+		dst[end++] = *src;
+		src++;
+	}
+
+	dst[end] = '\0';
+
 	return dst;
 }
 

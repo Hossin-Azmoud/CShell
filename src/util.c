@@ -26,7 +26,7 @@ char *join_path(char *dst, char *src)
 	{
 		_strcat(dst, "/");
 	}
-
+	
 	_strcat(dst, src);
 	
 	return dst;
@@ -59,10 +59,3 @@ int get_tokenized_path(char **paths)
 	return token_idx;
 }
 
-void print_env(char *envp[]) {
-	
-	while(*envp++){
-		_puts(*envp);
-		_putchar('\n');
-	}
-}

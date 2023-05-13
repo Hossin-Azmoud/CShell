@@ -30,19 +30,20 @@ int _puts(char *s) {
 }
 
 char *_realloc(char *ptr, int size) {
-	char *new = malloc(size);
-
+	
+	char *new       = malloc(size);
+	char *new_start = new;
+	
 	if(new == NULL) {
 		return NULL;
 	}
 	
-	while(*ptr)
+	while(*ptr != '\0')
 	{
-		*ptr++ = *new++;
+		*new++ = *ptr++;
 	}
-
-	free(ptr);
-	return new;
+	
+	return new_start;
 }
 
 char **allocate_char_grid(int row, int col) 
@@ -72,56 +73,27 @@ void free_char_grid(char **grid, int row)
 
 int read_command(char *buff, int cap)
 {
-	int size, cursor = 0;
-	char *c = malloc(1);
-	
-	while(read(STDIN_FILENO, c, 1))
+	int size = 0;
+	int c = 0;
+
+	while(1)
 	{
-		if(*c == '\n') 
-		{
+		read(STDIN_FILENO, &c, 1);
+
+		if(c == EOF || c == 0) {
+			exit(1);
+		}
+
+		if(c == '\n') {
 			break;
 		}
 
-		switch((int) *c) {
-			case EOF: {
-				exit(1);
-			} break;
-
-			case End_key: {
-				cursor = size;
-			
-			} break;
-			
-			case Left_key: {
-				if(cursor > 0) {
-					cursor--;
-				}
-				
-				lseek(STDIN_FILENO, cursor, SEEK_SET);
-			
-			} break;
-			
-			case Right_key: {
-				if(cursor < size) {
-					cursor++;
-				}
-
-				lseek(STDIN_FILENO, cursor, SEEK_SET);
-			
-			} break;
-			
-			default: {
-				
-				if(cap == size + 1) {
-					buff = _realloc(buff, size + 1);
-					cap += 1;
-				}
-
-				buff[size++] = *c;
-				cursor++;
-				printf("%s\n", buff);
-			} break;
+		if(cap == size + 1) {
+			buff = _realloc(buff, size + 1);
+			cap += 1;
 		}
+
+		buff[size++] = (char) c;
 	}
 
 	return size;

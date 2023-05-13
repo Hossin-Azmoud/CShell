@@ -3,85 +3,71 @@
 void test();
 int shell();
 
-int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[], char *envp[]) {
+int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[]) {
 	printf("Started\n");
-	shell(envp);
+	shell();
 	return 0;
 }
 
 void test() {
-	int i;
-	char *tmp;
-	char **xs = allocate_char_grid(BUFF_MAX, BUFF_MAX);
-	int  size = get_tokenized_path(xs);
-
-	for(i = 0; i < size; ++i)
-	{
-		tmp = xs[i];
-		
-		printf("before: %s => %i\n", tmp, _strlen(tmp));	
-		
-		join_path(tmp, "hello");
-		
-		printf("after: %s => %i\n", xs[i], _strlen(xs[i]));
-	}
-
-	free_char_grid(xs, BUFF_MAX);
+	char *a = malloc(BUFF_MAX);
+	char *b = malloc(BUFF_MAX);
+	
+	_strcpy(a, "/bin");
+	_strcpy(b, "ls");
+	
+	join_path(a, b);
+	
+	printf("cat: %s", a);
+	
+	free(a);
+	free(b);
 }
 
-int shell(char *envp[]) {
+int shell() {
 	
 	int size = 0;
 	int run = 1;
+	int result = 0;
 	char     *buff;
 	Command  *cmd;
-	
+	reg_built_ins();
     char **ENV_PATHS    = allocate_char_grid(BUFF_MAX, BUFF_MAX);
     int  ENV_PATHS_SIZE = get_tokenized_path(ENV_PATHS);
 
 	while(run) 
 	{
+		size = 0;
 		cmd  = alloc_cmd(BUFF_MAX);
 		buff = malloc(BUFF_MAX);
-		
 		prompt();
-
 		size = read_command(buff, BUFF_MAX);
 		
-		if(size > 1) {
+		if(size > 0) {
 				
 			parse_cmd(buff, cmd);
+			result = exec_builtin(cmd);
 			
-			
-			if(_strcmp(cmd->name, "exit")) {
-				_puts("exiting..\n");
-				run  = 0;
-				continue;
-			}
+			if(!result) {
+				
+				if(find_cmd(cmd, ENV_PATHS, ENV_PATHS_SIZE) == 0) 
+				{
 
-			if(_strcmp(cmd->name, "env"))
-			{
-				print_env(envp);
-				continue;
-			}
-
-			if(find_cmd(cmd, ENV_PATHS, ENV_PATHS_SIZE) == 0) 
-			{
-				commands_exec(cmd, envp);
+					commands_exec(cmd);
+					_puts("\n");
+					continue;
+				}	
+				
 				_puts("\n");
-				continue;
-			}
-			
-			_puts("\n");
-			_puts("ERROR ");
-			_puts("[ ");
-			_puts(cmd->name);
-			_puts(" ]\n");
-			perror("");
-			_puts("\n");
-		}
+				_puts("ERROR ");
+				_puts("[ ");
+				_puts(cmd->name);
+				_puts(" ]\n");
+				perror("");
+				_puts("\n");
 
-		size = 0;
+			}
+		}
 	}
 
 	free_char_grid(ENV_PATHS, ENV_PATHS_SIZE);
