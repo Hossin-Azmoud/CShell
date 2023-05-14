@@ -74,12 +74,49 @@ void free_char_grid(char **grid, int row)
 int read_command(char *buff, int cap)
 {
 	int size = 0;
+	char Seq[3];
 	int c = 0;
 
 	while(1)
 	{
 		read(STDIN_FILENO, &c, 1);
+		
+		if(c == SEQ_START_BYTE) 
+		{
+			read(STDIN_FILENO, &Seq[0], 1);
+			read(STDIN_FILENO, &Seq[1], 1);
+			if (Seq[0] == '[')
+			{
+				/*
+				Up_key = 65,
+				Down_key,
+				Right_key,
+				Left_key */
+				switch(Seq[1]) {
+					case Up_key: {
+						_puts("U Clicked `Up_key`!");
+					} break;
+					case Down_key: {
+						_puts("U Clicked `Down_key`!");
+					} break;
+					case Right_key: {
+						_puts("U Clicked `Right_key`!");
+					} break;
+					case Left_key: {
+						_puts("U Clicked `Left_key`!");
+					} break;
+					default: {
+						_puts("U Clicked `Unkown key.`!");
+						printf("%i\n", Seq[1]);
+					}
+				}
 
+				continue;
+			}
+
+			continue;
+		}
+		
 		if(c == EOF || c == 0) {
 			exit(1);
 		}

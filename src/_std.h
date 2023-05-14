@@ -10,12 +10,13 @@
 #include "util.h"
 
 #define BUFF_MAX 128
+#define SEQ_START_BYTE '\x1b'
 
-enum Key {
-	Left_key = 0x1b5b44,
-	Right_key = 0x1b5b43,
-	Down_key = 0x1b5b42,
-	Up_key = 0x1b5b41
+enum Keys {
+	Up_key = 65,
+	Down_key,
+	Right_key,
+	Left_key
 };
 
 int  _fputchar(char c, int Stream);

@@ -131,21 +131,33 @@ int find_cmd(Command *c, char **paths, int size) {
 }
 
 
-void built_in_exit(Command *cmd) {
-	if(cmd->size > 1)
+void built_in_exit(char **args, int count) {
+	int i;
+
+	if(count > 1)
 	{
+			
 		_puts("EXIT WAS CALLED WITH: ");
-		_puts(" args\n");
+		for(i = 0; i < count; i++) {
+			_puts(args[i]);
+			_puts("\n");
+		}
 	}
 
 	exit(0);
 }
-void built_in_env(Command *cmd) {
+
+void built_in_env(char **args, int count) {
+	int i;
 	
-	if(cmd->size > 1)
+	if(count > 1)
 	{
 		_puts("ENV WAS CALLED WITH: ");
-		_puts(" args\n");
+		
+		for(i = 0; i < count; i++) {
+			_puts(args[i]);
+			_puts("\n");
+		}
 	}
 
 	while(*environ){
@@ -155,21 +167,21 @@ void built_in_env(Command *cmd) {
 
 }
 
-void built_in_cd(Command *cmd) {
+void built_in_cd(char **args, int count) {
 	int res;
 	printf("Hello");
 	
-	if(cmd->size > 1)
+	if(count > 1)
 	{
 		_puts("CD WAS CALLED WITH: ");
 		_puts(" args\n");
 	}
 
-	res = chdir(cmd->args[1]);
+	res = chdir(args[1]);
 	
 	if (res != 0)
 	{
-		_puts(cmd->args[1]);
+		_puts(args[1]);
 		_putchar(' ');
 		perror(":");
 	}
@@ -178,12 +190,13 @@ void built_in_cd(Command *cmd) {
 int exec_builtin(Command *cmd) {
 	
 	int i = 0;	
+	
 	for(i = 0; i < BUILT_INS_COUNT; ++i)
 	{
 		built_in_command command = built_ins[i];
 		
 		if(_strcmp(command.name, cmd->name)) {
-			command.func(cmd);
+			command.func(cmd->args, cmd->size);
 			return 1;
 		}
 	}
@@ -191,7 +204,7 @@ int exec_builtin(Command *cmd) {
 	return 0;
 }
 
-built_in_command construct_built_in(char *name, void (*func)(Command *)) {
+built_in_command construct_built_in(char *name, void (*func)(char **, int)) {
 	
 	built_in_command *command = malloc(sizeof(built_in_command));
 	
