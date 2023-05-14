@@ -7,7 +7,7 @@ void prompt() {
 char *getpath() {
 	
 	char *envvar = "PATH";
-    char *path   = getenv(envvar);
+    char *path   = getEnv(envvar);
 
     if(!path) {
         fprintf(stderr, "The environment variable %s was not found.\n", envvar);
@@ -20,13 +20,14 @@ char *getpath() {
 char *join_path(char *dst, char *src)
 {
 
+	
 	int dst_last = _strlen(dst) - 1;
 	
 	if(dst[dst_last] != '/')
 	{
-		_strcat(dst, "/");
+		return join(dst, src, "/");
 	}
-	
+
 	_strcat(dst, src);
 	
 	return dst;

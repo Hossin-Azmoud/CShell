@@ -1,41 +1,26 @@
 #include "command.h"
+#include <assert.h>
 
 void test();
 int shell();
 
-int main(int argc, char *argv[]) 
-{
+int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[]) {
 
-    int result;
-
-    if (argc != 3)
-    {
-        printf("Error\n");
-        return 1;
-    }
-
-    result = atoi(argv[1]) * atoi(argv[2]);
-    
-    printf("%d\n", result);
-    
-    return 0;
-
-	/* shell(); */
+	test();
+	return 0;
 }
 
-void test() {
-	char *a = malloc(BUFF_MAX);
-	char *b = malloc(BUFF_MAX);
+void test() 
+{
+	char *my;
+	char *path = getEnv("PWD");
+	printf("%s\n", path);
+	setEnv("PWD", "/bin/");
 	
-	_strcpy(a, "/bin");
-	_strcpy(b, "ls");
+	my = getEnv("PWD");
 	
-	join_path(a, b);
-	
-	printf("cat: %s", a);
-	
-	free(a);
-	free(b);
+	printf("%s\n", my);
+
 }
 
 int shell() {
@@ -45,6 +30,7 @@ int shell() {
 	int result = 0;
 	char     *buff;
 	Command  *cmd;
+    
     char **ENV_PATHS    = allocate_char_grid(BUFF_MAX, BUFF_MAX);
     int  ENV_PATHS_SIZE = get_tokenized_path(ENV_PATHS);
 

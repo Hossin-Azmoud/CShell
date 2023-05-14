@@ -56,7 +56,7 @@ char *_strcat(char *dst, char *src)
 	int sz  = _strlen(dst) + _strlen(src) + 1; 
 	int end = _strlen(dst);
 	
-	_realloc(dst, sz);
+	dst = _realloc(dst, sz);
 	
 	while(*src)
 	{
@@ -73,7 +73,9 @@ char *_strcat(char *dst, char *src)
 int  _strcmp(char *s1, char *s2) {
 	
 	if(_strlen(s1) == _strlen(s2)) {
+		
 		int it = 0;
+		
 		while(s1[it])
 		{
 			if (s1[it] != s2[it]) 
@@ -88,4 +90,12 @@ int  _strcmp(char *s1, char *s2) {
 	}
 	
 	return 0;
+}
+
+
+char *join(char *dst, char *src, char *delim)
+{
+	dst = _strcat(dst, delim);	
+	dst = _strcat(dst, src);
+	return dst;
 }

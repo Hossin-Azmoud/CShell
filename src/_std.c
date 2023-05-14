@@ -1,9 +1,90 @@
 #include "_std.h"
 
+extern char **environ;
+
 int _fputchar(char c, int Stream) {
 	
 	if(!c) return 0;
 	return (write(Stream, &c, 1));
+}
+
+
+char *getEnv(char *key) {
+	
+	char *k = {0};
+	char *v = {0};
+
+	while(*environ)
+	{
+		k = strtok(*environ, "=");
+		v = strtok(NULL, " ");
+		
+		if(_strcmp(k, key)) 
+		{
+			return v;
+		}
+
+		*environ += 1;
+	}
+
+	return NULL;
+}
+
+char *setEnv(char *key, char *value) 
+{
+
+	char **new_environ;
+	char *copy = {0};
+	int  env_count = 0;
+	int  max_col   = 0;
+	int  col_size  = 0;
+	char *k        = {0};
+	char *v        = {0};
+
+	while(*environ)
+	{
+		_strcpy(copy, *environ);
+		col_size = _strlen(copy);
+		
+		if(col_size > max_col) {
+			max_col = col_size;
+		}
+
+		k = strtok(copy, "=");
+		v = strtok(NULL, " ");
+		
+		if(_strcmp(k, key)) /* found. */
+		{
+			key = join(key, value, "=");
+			_strcpy(*environ, key); /* Key = Value */
+			return v;
+		}
+
+		environ += 1;
+		env_count++;
+	}
+	
+	environ -= env_count;
+	
+	key         = join(key, value, "=");
+	new_environ = allocate_char_grid(env_count, max_col);
+
+	_strcpy(new_environ[env_count - 1], "");
+	
+	env_count--;
+	
+	_strcpy(new_environ[env_count - 1], key); /* Key = Value */
+	
+	env_count--;
+	
+	while(env_count > 0) {
+		_strcpy(new_environ[env_count - 1], environ[env_count - 1]);
+		env_count--;
+	}
+
+	environ = new_environ;
+
+	return "";
 }
 
 int _fputs(char *s, int Stream) {
@@ -21,21 +102,15 @@ int _fputs(char *s, int Stream) {
 	return n;
 }
 
-char *_itoa(int i) {
-
-    int buff[MAX_LEN];
-    int digit  = 0;
-    int d_pos_ = 1;
-
-    for(; i > 0; (i = (i - digit) / 10)) {
-        buff
-        d_pos_ *= 10:
-    }
-
-    return buff;
+#if 0
+/* TODO:  make converson functions. */
+int __itoa(int n, char *buff, int size) {
+	
+	
 }
 
-int _atoi(char *buff) {
+int __atoi(char *buff)
+{
     int n = 0;
     size_t len = strlen(buff);
     int digit_ = 0;
@@ -43,19 +118,20 @@ int _atoi(char *buff) {
     while(len-- > 0) {
 
         if(len - 1 == 0) {
-                if(buff[0] == '-') {
-                        n *= -1;
-                        break;
-                }
+            if(buff[0] == '-') {
+                n *= -1;
+                break;
+            }
         }
 
         n += (buff[len - 1] - '0' * digit_);
         digit_ *= 10;
-
     }
 
     return n;
 }
+
+#endif
 
 int _putchar(char c) {
 	return _fputchar(c, STDOUT_FILENO);

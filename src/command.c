@@ -12,8 +12,6 @@ Command *alloc_cmd(int cap)
 	cmd->size    = 0;	
 	return cmd;
 }
-
-
 void realloc_cmd(Command *cmd)
 {
 	Command *tmp = alloc_cmd(cmd->cap + BUFF_MAX);
@@ -224,7 +222,3 @@ void reg_built_ins() {
 	built_ins[2] = construct_built_in("cd", built_in_cd);
 	_puts("[2][REG] cd\n\n");
 }
-
-
-
-
