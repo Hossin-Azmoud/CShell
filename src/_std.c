@@ -21,6 +21,42 @@ int _fputs(char *s, int Stream) {
 	return n;
 }
 
+char *_itoa(int i) {
+
+    int buff[MAX_LEN];
+    int digit  = 0;
+    int d_pos_ = 1;
+
+    for(; i > 0; (i = (i - digit) / 10)) {
+        buff
+        d_pos_ *= 10:
+    }
+
+    return buff;
+}
+
+int _atoi(char *buff) {
+    int n = 0;
+    size_t len = strlen(buff);
+    int digit_ = 0;
+
+    while(len-- > 0) {
+
+        if(len - 1 == 0) {
+                if(buff[0] == '-') {
+                        n *= -1;
+                        break;
+                }
+        }
+
+        n += (buff[len - 1] - '0' * digit_);
+        digit_ *= 10;
+
+    }
+
+    return n;
+}
+
 int _putchar(char c) {
 	return _fputchar(c, STDOUT_FILENO);
 }
@@ -73,44 +109,62 @@ void free_char_grid(char **grid, int row)
 
 int read_command(char *buff, int cap)
 {
-	int size = 0;
-	char Seq[3];
-	int c = 0;
+	int  size = 0;
+	int  cursor = 0;
+	int  c = 0;
 
+	char Seq[3];
+	
 	while(1)
 	{
 		read(STDIN_FILENO, &c, 1);
 		
-		if(c == SEQ_START_BYTE) 
+		if(c == SEQ_START_BYTE)
 		{
 			read(STDIN_FILENO, &Seq[0], 1);
 			read(STDIN_FILENO, &Seq[1], 1);
-			if (Seq[0] == '[')
+			
+			if (Seq[0] == SEQ_SEC_BYTE)
 			{
 				/*
-				Up_key = 65,
-				Down_key,
-				Right_key,
-				Left_key */
+					Up_key = 65,
+					Down_key,
+					Right_key,
+					Left_key 
+				*/
 				switch(Seq[1]) {
-					case Up_key: {
+					case UP_KEY: {
 						_puts("U Clicked `Up_key`!");
 					} break;
-					case Down_key: {
+					case DOWN_KEY: {
 						_puts("U Clicked `Down_key`!");
 					} break;
-					case Right_key: {
-						_puts("U Clicked `Right_key`!");
+					case RIGHT_KEY: {
+						if(cursor < size) {
+							cursor++;
+						}
+						
+						lseek(STDIN_FILENO, cursor, SEEK_SET);
 					} break;
-					case Left_key: {
-						_puts("U Clicked `Left_key`!");
+					case LEFT_KEY: {
+						if(cursor > 0) {
+							cursor--;
+						}
+
+						lseek(STDIN_FILENO, cursor, SEEK_SET);
+					} break;
+					case END_KEY: {
+						_puts("U Clicked `End_key`!");
+					} break;
+					case HOME_KEY: {
+						_puts("U Clicked `Home_key`!");
 					} break;
 					default: {
 						_puts("U Clicked `Unkown key.`!");
 						printf("%i\n", Seq[1]);
 					}
 				}
-
+				
 				continue;
 			}
 
@@ -130,8 +184,10 @@ int read_command(char *buff, int cap)
 			cap += 1;
 		}
 
-		buff[size++] = (char) c;
+		buff[cursor++] = (char) c;
+		size++;
 	}
 
+	buff[size] = '\0';
 	return size;
 }
