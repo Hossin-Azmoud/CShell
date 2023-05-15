@@ -11,78 +11,86 @@ int _fputchar(char c, int Stream) {
 
 char *getEnv(char *key) {
 	
-	char *k = {0};
-	char *v = {0};
+	int  i;
+	int  size  = 0;
+	char *copy;
+	char *k = { 0 };
+	char *v = { 0 };
 
-	while(*environ)
+	for(i = 0; environ[i]; i++)
 	{
-		k = strtok(*environ, "=");
-		v = strtok(NULL, " ");
+		
+		size = _strlen(environ[i]);
+		
+		copy = malloc(size);
+
+		_strcpy(copy, environ[i]);
+
+		k = strtok(copy, "=");
+		v = strtok(NULL, "=");
 		
 		if(_strcmp(k, key)) 
 		{
 			return v;
 		}
 
-		*environ += 1;
+		free(copy);
 	}
 
+	free(copy);
 	return NULL;
 }
 
 char *setEnv(char *key, char *value) 
 {
 
+	
 	char **new_environ;
-	char *copy = {0};
-	int  env_count = 0;
+	char *copy;
+	char *new_var;
+	int  i;
 	int  max_col   = 0;
 	int  col_size  = 0;
-	char *k        = {0};
-	char *v        = {0};
+	char *k        = { 0 };
+	char *v        = { 0 };
 
-	while(*environ)
+	for(i = 0; environ[i]; i++)
 	{
-		_strcpy(copy, *environ);
-		col_size = _strlen(copy);
+		col_size = _strlen(environ[i]);
 		
-		if(col_size > max_col) {
+		if(col_size > max_col) 
+		{
 			max_col = col_size;
 		}
+		
+		copy = malloc(col_size);
+		_strcpy(copy, environ[i]);
 
 		k = strtok(copy, "=");
-		v = strtok(NULL, " ");
+		v = strtok(NULL, "=");
 		
 		if(_strcmp(k, key)) /* found. */
 		{
-			key = join(key, value, "=");
-			_strcpy(*environ, key); /* Key = Value */
+			new_var = join(key, value, "=");
+			_strcpy(environ[i], new_var); /* Key = Value */
 			return v;
 		}
-
-		environ += 1;
-		env_count++;
-	}
-	
-	environ -= env_count;
-	
-	key         = join(key, value, "=");
-	new_environ = allocate_char_grid(env_count, max_col);
-
-	_strcpy(new_environ[env_count - 1], "");
-	
-	env_count--;
-	
-	_strcpy(new_environ[env_count - 1], key); /* Key = Value */
-	
-	env_count--;
-	
-	while(env_count > 0) {
-		_strcpy(new_environ[env_count - 1], environ[env_count - 1]);
-		env_count--;
 	}
 
-	environ = new_environ;
+	new_var          =  join(key, value, "=");
+	new_environ  =  allocate_char_grid(i, max_col);
+
+	_strcpy(new_environ[i - 1], "");
+	i--;
+	
+	_strcpy(new_environ[i - 1], key); /* Key = Value */
+	i--;
+	
+	while(i-- > 0) {
+		_strcpy(new_environ[i - 1], environ[i - 1]);
+	}
+
+	environ = new_environ;	
 
 	return "";
 }

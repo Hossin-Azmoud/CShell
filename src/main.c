@@ -5,22 +5,18 @@ void test();
 int shell();
 
 int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[]) {
-
-	test();
+	shell();
 	return 0;
 }
 
 void test() 
 {
 	char *my;
-	char *path = getEnv("PWD");
+	char *path = getEnv("USER");
 	printf("%s\n", path);
-	setEnv("PWD", "/bin/");
-	
-	my = getEnv("PWD");
-	
+	setEnv("USER", "New_User");
+	my = getEnv("USER");
 	printf("%s\n", my);
-
 }
 
 int shell() {
@@ -49,7 +45,8 @@ int shell() {
 			parse_cmd(buff, cmd);
 			result = exec_builtin(cmd);
 			
-			if(!result) {
+			if(!result) 
+			{
 				
 				if(find_cmd(cmd, ENV_PATHS, ENV_PATHS_SIZE) == 0) 
 				{

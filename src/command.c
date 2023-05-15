@@ -6,10 +6,12 @@ extern char **environ;
 Command *alloc_cmd(int cap) 
 {
 	Command *cmd = malloc(sizeof(Command));	
+	
 	cmd->name    = (char*) malloc(cap);
 	cmd->args    = (char**) malloc(cap);
 	cmd->cap     = cap; 
 	cmd->size    = 0;	
+	
 	return cmd;
 }
 void realloc_cmd(Command *cmd)
@@ -29,7 +31,6 @@ void realloc_cmd(Command *cmd)
 void parse_cmd(char *buff, Command *cmd) {
 	
 	char    *Token    = strtok(buff, " ");
-	
 	if(!buff) return;
     
     while(Token != NULL)
@@ -37,6 +38,7 @@ void parse_cmd(char *buff, Command *cmd) {
     	if(cmd->size == 0) 
     	{
     		cmd->name = Token;
+    		
     	}
 
     	cmd->args[cmd->size++] = Token;
@@ -48,17 +50,19 @@ void parse_cmd(char *buff, Command *cmd) {
 
         Token = strtok(NULL, " ");
     }
+
 }
 
 void print_command(Command *c) {
 	
 	int i;
-	_puts("--------PARSED COMMAND---------");
+	
+	_puts("--------PARSED COMMAND---------\n");
 	_puts("name: ");
 	_puts(c->name);
 	_puts("\n");
 	
-	for(i = 0; i < c->size; i++) {
+	for(i = 1; i < c->size; i++) {
 		_puts(c->args[i]);
 		_puts(" ");
 	}
@@ -99,9 +103,8 @@ void commands_exec(Command *cmd) {
 int find_cmd(Command *c, char **paths, int size) {
 	int i;
 	int res;
-	char *copy;
+	char *copy;	
 	
-
 	if(size == 0) return 1;
 	
 	res = access(c->name, X_OK); 
@@ -112,17 +115,18 @@ int find_cmd(Command *c, char **paths, int size) {
 
 	for (i = 0; i < size; ++i) 
 	{
-		copy = malloc(_strlen(paths[i]) + 1);
-		_strcpy(copy, paths[i]);
-		join_path(copy, c->name);
-		
+		copy = malloc(_strlen(paths[i]) + _strlen(c->name) + 1);
+		_strcpy(copy, paths[i]);		
+		copy = join_path(copy, c->name);		
 		res = access(copy, X_OK);
 		
 		if(res != -1)
 		{
-			_strcpy(c->name, copy);
+			c->name = copy;
 			return 0;
 		}
+
+		free(copy);
 	}
 
 	return 1; /* Not found */
@@ -157,22 +161,18 @@ void built_in_env(char **args, int count) {
 			_puts("\n");
 		}
 	}
-
-	while(*environ){
-		_puts(*environ++);
-		_putchar('\n');
+	
+	for(i = 0; environ[i]; i++) {
+		_puts(environ[i]);
+		_putchar('\n');	
 	}
-
 }
 
 void built_in_cd(char **args, int count) {
 	int res;
-	printf("Hello");
 	
-	if(count > 1)
-	{
-		_puts("CD WAS CALLED WITH: ");
-		_puts(" args\n");
+	if(count == 1) {
+		args[1] = "/";
 	}
 
 	res = chdir(args[1]);
