@@ -62,5 +62,7 @@ char  *_realloc(char *ptr, int size);
 int   read_command(char *buff, int cap);
 char  *getEnv(char *key);
 char  *setEnv(char *key, char *value);
+char  *__itoa(int n, char **buff);
+int   __atoi(char *buff);
 
 #endif /* __STD__H */

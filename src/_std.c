@@ -44,7 +44,7 @@ char *getEnv(char *key) {
 char *setEnv(char *key, char *value) 
 {
 
-	
+	  
 	char **new_environ;
 	char *copy;
 	char *new_var;
@@ -110,37 +110,6 @@ int _fputs(char *s, int Stream) {
 	return n;
 }
 
-#if 0
-/* TODO:  make converson functions. */
-int __itoa(int n, char *buff, int size) {
-	
-	
-}
-
-int __atoi(char *buff)
-{
-    int n = 0;
-    size_t len = strlen(buff);
-    int digit_ = 0;
-
-    while(len-- > 0) {
-
-        if(len - 1 == 0) {
-            if(buff[0] == '-') {
-                n *= -1;
-                break;
-            }
-        }
-
-        n += (buff[len - 1] - '0' * digit_);
-        digit_ *= 10;
-    }
-
-    return n;
-}
-
-#endif
-
 int _putchar(char c) {
 	return _fputchar(c, STDOUT_FILENO);
 }
@@ -196,7 +165,6 @@ int read_command(char *buff, int cap)
 	int  size = 0;
 	int  cursor = 0;
 	int  c = 0;
-
 	char Seq[3];
 	
 	while(1)
@@ -208,9 +176,10 @@ int read_command(char *buff, int cap)
 			read(STDIN_FILENO, &Seq[0], 1);
 			read(STDIN_FILENO, &Seq[1], 1);
 			
-			if (Seq[0] == SEQ_SEC_BYTE)
+			if (Seq[0] == SEQ_SEC_BYTE) 
 			{
-				switch(Seq[1]) {
+				switch(Seq[1]) 
+				{
 					case UP_KEY: {
 						_puts("U Clicked `Up_key`!");
 					} break;
@@ -259,7 +228,7 @@ int read_command(char *buff, int cap)
 		if(c == '\n') {
 			break;
 		}
-
+		
 		if(cap == size + 1) {
 			buff = _realloc(buff, size + 1);
 			cap += 1;
@@ -280,6 +249,75 @@ int _cputs(char *s, char *color_seq) {
 	n += _puts(color_seq);
 	n += _puts(s);
 	n += reset_term_color();
+
+	return n;
+}
+
+
+
+
+char *__itoa(int n, char **buff)
+{
+	int  i          = 0;
+	int  size       = _strlen(*buff);
+	char *buff_ptr  = (*buff + size - 1);
+	
+	int is_signed  = 0;
+	
+	
+	if(n < 0) {
+		is_signed = (int)(n < 0);
+		n = -n;
+	}
+
+	if(n == 0) {
+		*buff[i++] = '0';
+		*buff[i]   = '\0';
+		
+		return *buff;
+	}
+
+	*buff_ptr-- = '\0';
+	
+
+	for(; 1;(n = (n / 10)), *buff_ptr--)  {
+		
+		*buff_ptr  = (n % 10 + '0');
+		
+		if(n == 0) {
+			
+			if (is_signed)
+		    {
+		    	*buff_ptr-- = '-';
+		    }
+			
+			*buff = buff_ptr + 1;
+		    
+		    return  *buff;
+		}
+	}
+}
+
+
+int __atoi(char *buff) {
+    int n = 0;
+    size_t len = strlen(buff);
+    int digit_ = 1;
+	
+	for(; len > 0; len--, (digit_ *= 10)){
+		
+		if(len - 1 == 0) {
+			if(buff[len - 1] == '-') {
+                n = -n;
+                break;
+            }
+
+            n += (buff[len - 1] - '0' * digit_);
+            break;
+		}
+
+		n += (buff[len - 1] - '0') * digit_;
+	}
 
 	return n;
 }

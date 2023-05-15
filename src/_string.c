@@ -1,7 +1,6 @@
 #include "_string.h"
 
-int _strlen(char *s) {
-	
+int _strlen(char *s) {	
 	int len = 0;
 	if(s == NULL) {
 		return 0;

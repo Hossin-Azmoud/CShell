@@ -1,4 +1,4 @@
-#include "command.h"
+#include "shell.h"
 
 static built_in_command built_ins[MAX_BUILT_IN_COUNT] = { 0 };
 static int BUILT_INS_COUNT = 0;
@@ -9,9 +9,9 @@ Command *alloc_cmd(int cap)
 	Command *cmd = malloc(sizeof(Command));	
 	
 	cmd->name    = (char*) malloc(cap);
-	cmd->args    = (char**) malloc(cap) + 1;
+	cmd->argv    = (char**) malloc(cap) + 1;
 	cmd->cap     = cap; 
-	cmd->size    = 0;	
+	cmd->argc    = 0;	
 	
 	return cmd;
 }
@@ -23,9 +23,9 @@ void realloc_cmd(Command *cmd)
 	
 	tmp->name = cmd->name;
 	
-	for (i = 0; i < cmd->size; ++i)
+	for (i = 0; i < cmd->argc; ++i)
 	{
-		tmp->args[tmp->size++] = cmd->args[i];
+		tmp->argv[tmp->argc++] = cmd->argv[i];
 	}
 
 	*cmd = *tmp; /* Move tmp to cmd */
@@ -38,15 +38,15 @@ void parse_cmd(char *buff, Command *cmd) {
     
     while(Token != NULL)
     {
-    	if(cmd->size == 0) 
+    	if(cmd->argc == 0) 
     	{
     		cmd->name = Token;
     		
     	}
 
-    	cmd->args[cmd->size++] = Token;
+    	cmd->argv[cmd->argc++] = Token;
         
-        if(cmd->size == cmd->cap) 
+        if(cmd->argc == cmd->cap) 
         {
         	realloc_cmd(cmd); /* reallocate another.. */
         }
@@ -54,7 +54,7 @@ void parse_cmd(char *buff, Command *cmd) {
         Token = strtok(NULL, " ");
     }
 
-    cmd->args[cmd->size] = NULL;
+    cmd->argv[cmd->argc] = NULL;
 
 }
 
@@ -67,8 +67,8 @@ void print_command(Command *c) {
 	_puts(c->name);
 	_puts("\n");
 	
-	for(i = 1; i < c->size; i++) {
-		_puts(c->args[i]);
+	for(i = 1; i < c->argc; i++) {
+		_puts(c->argv[i]);
 		_puts(" ");
 	}
 	
@@ -88,8 +88,8 @@ void commands_exec(Command *cmd) {
 		/* Child Process. */
 		
 		_putchar('\n');
-		code = execve(cmd->name, cmd->args, environ);
-	
+		code = execve(cmd->name, cmd->argv, environ);
+		printf("Exex\n");
 		if(code == -1) 
 		{
 			print_command(cmd);
@@ -217,7 +217,7 @@ int exec_builtin(Command *cmd) {
 		built_in_command command = built_ins[i];
 		
 		if(_strcmp(command.name, cmd->name)) {
-			command.func(cmd->args, cmd->size);
+			command.func(cmd->argv, cmd->argc);
 			return 1;
 		}
 	}
@@ -251,4 +251,65 @@ void reg_built_ins() {
 	built_ins[3] = construct_built_in("clear", built_in_clear);
 	_puts("[3][REG] clear\n\n");
 	
+}
+
+
+
+int shell() {
+	
+	int size = 0;
+	int run = 1;
+	int result = 0;
+	char     *buff;
+	Command  *cmd;
+    
+    char **ENV_PATHS    = allocate_char_grid(BUFF_MAX, BUFF_MAX);
+    int  ENV_PATHS_SIZE = get_tokenized_path(ENV_PATHS);
+
+    reg_built_ins();
+
+	while(run)  
+	{
+		size = 0;
+
+		cmd  = alloc_cmd(BUFF_MAX);
+		buff = malloc(BUFF_MAX);
+		
+		prompt();
+
+		size = read_command(buff, BUFF_MAX);
+		
+		if(size > 0) {
+				
+			parse_cmd(buff, cmd);
+			result = exec_builtin(cmd);
+			
+			if(!result) 
+			{
+				
+				if(find_cmd(cmd, ENV_PATHS, ENV_PATHS_SIZE) == 0) 
+				{
+					commands_exec(cmd);
+					_puts("\n");
+					continue;
+				}	
+
+				_fputs("\n", STDERR_FILENO);
+				_fputs("ERROR ", STDERR_FILENO);
+				_fputs("[ ", STDERR_FILENO);
+				_fputs(cmd->name, STDERR_FILENO);
+				_fputs(" ]\n", STDERR_FILENO);
+				
+				perror("");
+				
+				_fputs("\n", STDERR_FILENO);
+			}
+		}
+	}
+
+	free_char_grid(ENV_PATHS, ENV_PATHS_SIZE);
+	free(cmd);
+	free(buff);
+	
+	return 0;
 }
