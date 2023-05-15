@@ -1,17 +1,12 @@
 # CShell
+## Description
 
-- Custom Shell using Standard C.
+- A C shell from scratch.
 
-# Structures
+## Structs and defied variables.
 
+- TODO.
 
+## Functions.
 
-
-
-
-
-
-
-
-
-
+- TODO.
