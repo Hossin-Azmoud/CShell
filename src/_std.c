@@ -210,12 +210,6 @@ int read_command(char *buff, int cap)
 			
 			if (Seq[0] == SEQ_SEC_BYTE)
 			{
-				/*
-					Up_key = 65,
-					Down_key,
-					Right_key,
-					Left_key 
-				*/
 				switch(Seq[1]) {
 					case UP_KEY: {
 						_puts("U Clicked `Up_key`!");
@@ -228,19 +222,22 @@ int read_command(char *buff, int cap)
 							cursor++;
 						}
 						
-						lseek(STDIN_FILENO, cursor, SEEK_SET);
+						fseek(stdin, cursor, SEEK_SET);
+					
 					} break;
 					case LEFT_KEY: {
 						if(cursor > 0) {
 							cursor--;
 						}
 
-						lseek(STDIN_FILENO, cursor, SEEK_SET);
+						fseek(stdin, cursor, SEEK_SET);
 					} break;
 					case END_KEY: {
+						cursor = size - 1;
 						_puts("U Clicked `End_key`!");
 					} break;
 					case HOME_KEY: {
+						cursor = 0;
 						_puts("U Clicked `Home_key`!");
 					} break;
 					default: {

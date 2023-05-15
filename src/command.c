@@ -1,6 +1,7 @@
 #include "command.h"
 
-static built_in_command built_ins[BUILT_INS_COUNT] = { 0 };
+static built_in_command built_ins[MAX_BUILT_IN_COUNT] = { 0 };
+static int BUILT_INS_COUNT = 0;
 extern char **environ;
 
 Command *alloc_cmd(int cap) 
@@ -168,6 +169,23 @@ void built_in_env(char **args, int count) {
 	}
 }
 
+void built_in_clear(char **args, int count) {
+	int i;
+	
+	if(count > 1)
+	{
+		_puts("clear WAS CALLED WITH: ");
+		
+		for(i = 0; i < count; i++) {
+			_puts(args[i]);
+			_puts("\n");
+		}
+	}
+
+	_puts(CLEAR_BYTES);
+	_puts("\033[0;0H\n"); /* Go to the starting col and row of the term. */
+}
+
 void built_in_cd(char **args, int count) {
 	int res;
 	
@@ -208,11 +226,14 @@ built_in_command construct_built_in(char *name, void (*func)(char **, int)) {
 	
 	command->name = name;
 	command->func = func;
-
+	
+	BUILT_INS_COUNT++;
+	
 	return *command;
 }
 
 void reg_built_ins() {
+	
 	built_ins[0] = construct_built_in("exit", built_in_exit);
 	_puts("\n[0][REG] exit\n");
 	
@@ -220,5 +241,9 @@ void reg_built_ins() {
 	_puts("[1][REG] env\n");
 	
 	built_ins[2] = construct_built_in("cd", built_in_cd);
-	_puts("[2][REG] cd\n\n");
+	_puts("[2][REG] cd\n");
+	
+	built_ins[3] = construct_built_in("clear", built_in_clear);
+	_puts("[3][REG] clear\n\n");
+	
 }
