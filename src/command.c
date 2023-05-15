@@ -9,7 +9,7 @@ Command *alloc_cmd(int cap)
 	Command *cmd = malloc(sizeof(Command));	
 	
 	cmd->name    = (char*) malloc(cap);
-	cmd->args    = (char**) malloc(cap);
+	cmd->args    = (char**) malloc(cap) + 1;
 	cmd->cap     = cap; 
 	cmd->size    = 0;	
 	
@@ -18,7 +18,9 @@ Command *alloc_cmd(int cap)
 void realloc_cmd(Command *cmd)
 {
 	Command *tmp = alloc_cmd(cmd->cap + BUFF_MAX);
+	
 	int i;
+	
 	tmp->name = cmd->name;
 	
 	for (i = 0; i < cmd->size; ++i)
@@ -51,6 +53,8 @@ void parse_cmd(char *buff, Command *cmd) {
 
         Token = strtok(NULL, " ");
     }
+
+    cmd->args[cmd->size] = NULL;
 
 }
 
@@ -88,8 +92,9 @@ void commands_exec(Command *cmd) {
 	
 		if(code == -1) 
 		{
-			_puts(cmd->name);
-			perror(": ");
+			print_command(cmd);
+			
+			perror("");
 			_putchar('\n');
 			exit(0);
 		}

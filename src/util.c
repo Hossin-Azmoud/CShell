@@ -1,7 +1,29 @@
 #include "./util.h"
 
+
+#define STD_NRM      "\x1B[0m"
+#define STD_RED      "\x1B[1;31m"
+#define STD_GREEN    "\x1B[1;32m"
+#define STD_YELLOW   "\x1B[1;33m"
+#define STD_BLUE     "\x1B[1;34m"
+#define STD_MAGINTA  "\x1B[1;35m"
+#define STD_CYAN     "\x1B[1;36m"
+#define STD_WHITE    "\x1B[1;37m"
+
+
 void prompt() {
-	_puts("[C-SHEL] > ");
+	char *user_name = getEnv("USER");
+	
+	if(user_name) {
+		_putchar('[');
+		_cputs(user_name, STD_YELLOW);
+		_putchar(']');
+		_cputs(" >>> ", STD_CYAN);
+		return;
+	}
+
+	_fputs("Could not find USER env variable. please check if it is set.\n", STDERR_FILENO);
+	exit(1);	
 }
 
 char *getpath() {
@@ -10,7 +32,7 @@ char *getpath() {
     char *path   = getEnv(envvar);
 
     if(!path) {
-        fprintf(stderr, "The environment variable %s was not found.\n", envvar);
+        _fputs("PATH env was not found!.\n", STDERR_FILENO);
         exit(1);
     }
 
@@ -25,10 +47,11 @@ char *join_path(char *dst, char *src)
 	
 	if(dst[dst_last] != '/')
 	{
-		return join(dst, src, "/");
+		dst = join(dst, src, "/");
+		return dst;
 	}
 
-	_strcat(dst, src);
+	dst = _strcat(dst, src);
 	
 	return dst;
 }

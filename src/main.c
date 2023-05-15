@@ -50,7 +50,6 @@ int shell() {
 				
 				if(find_cmd(cmd, ENV_PATHS, ENV_PATHS_SIZE) == 0) 
 				{
-
 					commands_exec(cmd);
 					_puts("\n");
 					continue;

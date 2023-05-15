@@ -272,3 +272,14 @@ int read_command(char *buff, int cap)
 	buff[size] = '\0';
 	return size;
 }
+
+
+int _cputs(char *s, char *color_seq) {
+	int n = 0;
+
+	n += _puts(color_seq);
+	n += _puts(s);
+	n += reset_term_color();
+
+	return n;
+}

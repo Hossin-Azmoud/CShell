@@ -1,6 +1,17 @@
 # CShell
-## Description
-- making a shell in C.
+
+- Custom Shell using Standard C.
+
+# Structures
+
+
+
+
+
+
+
+
+
 
 
 
