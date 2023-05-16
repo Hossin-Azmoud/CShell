@@ -64,5 +64,6 @@ char  *getEnv(char *key);
 char  *setEnv(char *key, char *value);
 char  *__itoa(int n, char **buff);
 int   __atoi(char *buff);
+void  unsetEnv(char *key);
 
 #endif /* __STD__H */

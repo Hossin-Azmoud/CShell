@@ -1,21 +1,38 @@
 #include "shell.h"
+#include <assert.h>
+
+#define TESTING 1
+
 void test_unit();
 
-int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[]) {
-	test_unit();
+int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
+{
+	#if TESTING
+		test_unit();
+	#else
+		shell();
+	#endif
+	
 	return 0;
 }
 
 void test_unit() 
 {
-
-	char *buffer = malloc(BUFF_MAX);
-	int  x = 0;
-	int  n = -23472;
-
-	__itoa(n, &buffer);
-	x = __atoi(buffer);
-	
-	printf("%i -> %s\n", n, buffer);
-	printf("x => %i\n", x);
+	{
+		/* testing unset env. */
+		char *val;
+		setEnv("Hello", "World");
+		
+		printf("set!\n");
+		
+		val = getEnv("Hello");
+		printf("%s\n", val);
+		
+		unsetEnv("Hello");
+		printf("unset!\n");
+			
+		val = getEnv("Hello");
+		
+		assert(val == NULL && "Value was found after unsetting");
+	}
 }

@@ -3,7 +3,6 @@
 extern char **environ;
 
 int _fputchar(char c, int Stream) {
-	
 	if(!c) return 0;
 	return (write(Stream, &c, 1));
 }
@@ -13,11 +12,11 @@ char *getEnv(char *key) {
 	
 	int  i;
 	int  size  = 0;
+	char *k    = { 0 };
+	char *v    = { 0 };
 	char *copy;
-	char *k = { 0 };
-	char *v = { 0 };
 
-	for(i = 0; environ[i]; i++)
+	for(i = 0; environ[i] != NULL; i++) 
 	{
 		
 		size = _strlen(environ[i]);
@@ -37,25 +36,26 @@ char *getEnv(char *key) {
 		free(copy);
 	}
 
-	free(copy);
 	return NULL;
 }
 
 char *setEnv(char *key, char *value) 
 {
-
-	  
 	char **new_environ;
+	
 	char *copy;
 	char *new_var;
 	int  i;
+	
 	int  max_col   = 0;
 	int  col_size  = 0;
+	
 	char *k        = { 0 };
 	char *v        = { 0 };
 
-	for(i = 0; environ[i]; i++)
+	for(i = 0; environ[i] != NULL; i++)
 	{
+
 		col_size = _strlen(environ[i]);
 		
 		if(col_size > max_col) 
@@ -76,23 +76,85 @@ char *setEnv(char *key, char *value)
 			return v;
 		}
 	}
-
-	new_var          =  join(key, value, "=");
+	
+	new_var      =  join(key, value, "=");
 	new_environ  =  allocate_char_grid(i, max_col);
 
-	_strcpy(new_environ[i - 1], "");
-	i--;
-	
-	_strcpy(new_environ[i - 1], key); /* Key = Value */
-	i--;
-	
-	while(i-- > 0) {
-		_strcpy(new_environ[i - 1], environ[i - 1]);
+	if(new_environ == NULL)
+	{
+		_fputs("Could not set env: \n", STDERR_FILENO);
+		_fputs(new_var, STDERR_FILENO);
+		_fputs("\nmalloc failed to allocate.\n", STDERR_FILENO);
+		return NULL;
 	}
 
-	environ = new_environ;	
+	new_environ[i - 1] = NULL;
+	i--;
+
+	_strcpy(new_environ[i - 1], new_var); /* Key = Value */
+	i--;
+	
+
+	while(i > 0)
+	{
+		_strcpy(new_environ[i - 1], environ[i - 1]);
+		i--;
+	}
+
+	
+	
+	environ = new_environ;
 
 	return "";
+}
+
+void unsetEnv(char *key)
+{
+	int i;
+	int  skipped   = 0;
+	char *k        = { 0 };
+	
+	
+	char **new_environ = allocate_char_grid(BUFF_MAX, BUFF_MAX);
+	char *copy;
+
+	for(i = 0; environ[i]; i++)
+	{
+		
+		copy = malloc(_strlen(environ[i]));
+		_strcpy(copy, environ[i]);
+		
+		k = strtok(copy, "=");
+		strtok(NULL, "=");
+		
+		if(_strcmp(k, key))
+		{
+			i++;
+			skipped = 1;
+			break;
+		}
+
+		new_environ[i] = environ[i];
+	}
+
+	if(!skipped)
+	{
+		_fputs("Could not unset env: \n", STDERR_FILENO);
+		_fputs(key, STDERR_FILENO);
+		_fputs("\nmalloc failed to allocate.\n", STDERR_FILENO);
+		
+		return;
+	}
+	
+	
+	/* Move the rest. */
+	while(environ[i]) {
+		new_environ[i] = environ[i];
+		i++;
+	}
+
+	new_environ[i] = NULL;
+	environ        = new_environ;
 }
 
 int _fputs(char *s, int Stream) {
@@ -253,9 +315,6 @@ int _cputs(char *s, char *color_seq) {
 	return n;
 }
 
-
-
-
 char *__itoa(int n, char **buff)
 {
 	int  i          = 0;
@@ -300,23 +359,27 @@ char *__itoa(int n, char **buff)
 
 
 int __atoi(char *buff) {
+    
     int n = 0;
     size_t len = strlen(buff);
     int digit_ = 1;
 	
-	for(; len > 0; len--, (digit_ *= 10)){
+	for(; len > 0; len--)
+	{
 		
 		if(len - 1 == 0) {
+			
 			if(buff[len - 1] == '-') {
                 n = -n;
                 break;
             }
 
-            n += (buff[len - 1] - '0' * digit_);
+            n += (buff[len - 1] - '0') * digit_;
             break;
 		}
 
 		n += (buff[len - 1] - '0') * digit_;
+		digit_ *= 10;
 	}
 
 	return n;

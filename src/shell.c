@@ -15,12 +15,12 @@ Command *alloc_cmd(int cap)
 	
 	return cmd;
 }
+
 void realloc_cmd(Command *cmd)
 {
-	Command *tmp = alloc_cmd(cmd->cap + BUFF_MAX);
 	
+	Command *tmp = alloc_cmd(cmd->cap + BUFF_MAX);	
 	int i;
-	
 	tmp->name = cmd->name;
 	
 	for (i = 0; i < cmd->argc; ++i)
@@ -33,15 +33,19 @@ void realloc_cmd(Command *cmd)
 
 void parse_cmd(char *buff, Command *cmd) {
 	
-	char    *Token    = strtok(buff, " ");
+	char *Token = strtok(buff, " ");
+	int  len;
+	
 	if(!buff) return;
     
     while(Token != NULL)
     {
-    	if(cmd->argc == 0) 
-    	{
+    	len = _strlen(Token);
+    	
+    	Token[len] = '\0';
+    	
+    	if(cmd->argc == 0) {
     		cmd->name = Token;
-    		
     	}
 
     	cmd->argv[cmd->argc++] = Token;
@@ -55,7 +59,6 @@ void parse_cmd(char *buff, Command *cmd) {
     }
 
     cmd->argv[cmd->argc] = NULL;
-
 }
 
 void print_command(Command *c) {
@@ -73,7 +76,6 @@ void print_command(Command *c) {
 	}
 	
 	_puts("\n");
-
 }
 
 void commands_exec(Command *cmd) {
@@ -119,10 +121,10 @@ int find_cmd(Command *c, char **paths, int size) {
 		return 0;
 	}
 
-	for (i = 0; i < size; ++i) 
+	for(i = 0; i < size; ++i) 
 	{
 		copy = malloc(_strlen(paths[i]) + _strlen(c->name) + 1);
-		_strcpy(copy, paths[i]);		
+		_strcpy(copy, paths[i]);
 		copy = join_path(copy, c->name);		
 		res = access(copy, X_OK);
 		
@@ -140,19 +142,15 @@ int find_cmd(Command *c, char **paths, int size) {
 
 
 void built_in_exit(char **args, int count) {
-	int i;
+	int code = 0;
 
 	if(count > 1)
 	{
-			
-		_puts("EXIT WAS CALLED WITH: ");
-		for(i = 0; i < count; i++) {
-			_puts(args[i]);
-			_puts("\n");
-		}
+		code = __atoi(args[1]);
+		printf("Exiting with %s, %i\n", args[1], code);
 	}
 
-	exit(0);
+	exit(code);
 }
 
 void built_in_env(char **args, int count) {
@@ -160,7 +158,7 @@ void built_in_env(char **args, int count) {
 	
 	if(count > 1)
 	{
-		_puts("ENV WAS CALLED WITH: ");
+		_puts("env was called with: ");
 		
 		for(i = 0; i < count; i++) {
 			_puts(args[i]);
