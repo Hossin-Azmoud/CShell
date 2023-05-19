@@ -9,7 +9,8 @@
 #include <string.h>
 #include "util.h"
 
-#define BUFF_MAX 128
+#define BUFF_MAX  128
+#define MAX_DIGIT 32
 #define SEQ_START_BYTE '\x1b'
 #define SEQ_SEC_BYTE   '['
 #define UP_KEY    	   65
@@ -65,5 +66,6 @@ char  *setEnv(char *key, char *value);
 char  *__itoa(int n, char **buff);
 int   __atoi(char *buff);
 void  unsetEnv(char *key);
+int   _fputi(int i, int Stream);
 
 #endif /* __STD__H */

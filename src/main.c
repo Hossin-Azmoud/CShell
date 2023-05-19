@@ -18,21 +18,21 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
 
 void test_unit() 
 {
-	{
-		/* testing unset env. */
-		char *val;
-		setEnv("Hello", "World");
-		
-		printf("set!\n");
-		
-		val = getEnv("Hello");
-		printf("%s\n", val);
-		
-		unsetEnv("Hello");
-		printf("unset!\n");
-			
-		val = getEnv("Hello");
-		
-		assert(val == NULL && "Value was found after unsetting");
+
+	/* Testing parser */
+	int i = 0;
+	
+	char s[BUFF_MAX] = "cd ; ls ; cd\0";
+	Command  **command_array = parse_commands(s);
+
+	
+	while(command_array[i] != NULL) {
+		printf("MAIN: %s\n", command_array[i]->name);
+		i++;
 	}
+	
+	command_array = command_array;
+
+	free_cmd_grid(command_array);
+
 }

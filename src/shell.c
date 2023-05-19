@@ -2,6 +2,7 @@
 
 static built_in_command built_ins[MAX_BUILT_IN_COUNT] = { 0 };
 static int BUILT_INS_COUNT = 0;
+static int COMMAND_MAX     = 10;
 extern char **environ;
 
 Command *alloc_cmd(int cap) 
@@ -14,6 +15,36 @@ Command *alloc_cmd(int cap)
 	cmd->argc    = 0;	
 	
 	return cmd;
+}
+
+Command **alloc_cmds_buffer(int cap) 
+{
+	
+	int  it;
+	Command **grid = (Command**) malloc(COMMAND_MAX * sizeof(Command *));
+
+	for(it = 0; it < COMMAND_MAX; ++it)
+	{
+		grid[it] = alloc_cmd(cap);
+	}
+
+	return grid;
+
+}
+
+void free_cmd_grid(Command **grid)
+{
+	
+	int it;
+
+	for(it = 0;grid[it] != NULL; ++it)
+	{
+		free(grid[it]->argv);
+		free(grid[it]->name);
+		free(grid[it]);
+	}
+
+    free(grid);
 }
 
 void realloc_cmd(Command *cmd)
@@ -31,13 +62,83 @@ void realloc_cmd(Command *cmd)
 	*cmd = *tmp; /* Move tmp to cmd */
 }
 
-void parse_cmd(char *buff, Command *cmd) {
+Command **parse_commands(char *buff)
+{
+	char     *command_buff;
+	int      size = 0;
+	int      it = 0;
+	int      j  = 0;
+	Command  *command_cp;
+	Command  **cmd    = alloc_cmds_buffer(COMMAND_MAX);
+	char     **tokens = allocate_char_grid(COMMAND_MAX, BUFF_MAX);
+	command_buff = strtok(buff, ";");
 	
-	char *Token = strtok(buff, " ");
+	while(command_buff != NULL) 
+	{
+		
+		if(size + 1 == COMMAND_MAX) 
+		{
+			
+			_fputs("[MEMORY ERROR] Command size reached the limit.\n", STDERR_FILENO);
+			_fputs("[SIZE] ",                                          STDERR_FILENO);
+			_fputi(size,                                               STDERR_FILENO);
+			_fputs("\n",                                               STDERR_FILENO);
+
+			return NULL;
+		}
+		
+
+		_strcpy(tokens[size], command_buff);
+		printf("Toked: %s\n", tokens[size]);
+		size++;
+		command_buff = strtok(NULL, ";");
+	}
+
+	tokens[size] = NULL;
+
+	for(it = 0; it < size; it++) 
+	{
+		printf("Parsing..: %s\n", tokens[it]);
+		
+		command_cp = alloc_cmd(BUFF_MAX);
+		
+		if(parse_command(tokens[it], command_cp) == 0) 
+		{
+			_strcpy(cmd[it]->name, command_cp->name);
+			
+			for(j = 0; j < command_cp->argc; ++j)
+			{
+				_strcpy(cmd[it]->argv[j], command_cp->argv[j]);
+			}
+			
+			cmd[it]->argc = j;
+			printf("Parsed: %s\n", cmd[it]->name);
+			free(command_cp);
+			continue;
+		}
+
+		free(command_cp);
+		_fputs("[PARSE ERROR] a command could not be parsed.\n", STDERR_FILENO);
+		return NULL;
+	}
+
+	cmd[it] = NULL;
+	free_char_grid(tokens, size);
+	return cmd;
+}
+
+ 
+
+int parse_command(char *buff, Command *cmd) 
+{
+	char *cp = malloc(BUFF_MAX);
+	char *Token;	
 	int  len;
+	_strcpy(cp, buff);
+	Token = strtok(cp, " ");
 	
-	if(!buff) return;
-    
+	if(!buff) return 0;
+
     while(Token != NULL)
     {
     	len = _strlen(Token);
@@ -45,10 +146,10 @@ void parse_cmd(char *buff, Command *cmd) {
     	Token[len] = '\0';
     	
     	if(cmd->argc == 0) {
-    		cmd->name = Token;
+    		_strcpy(cmd->name, Token);
     	}
 
-    	cmd->argv[cmd->argc++] = Token;
+    	_strcpy(cmd->argv[cmd->argc++], Token);
         
         if(cmd->argc == cmd->cap) 
         {
@@ -59,6 +160,9 @@ void parse_cmd(char *buff, Command *cmd) {
     }
 
     cmd->argv[cmd->argc] = NULL;
+    
+    free(cp);
+    return 0;
 }
 
 void print_command(Command *c) {
@@ -195,6 +299,13 @@ void built_in_cd(char **args, int count) {
 	if(count == 1) {
 		args[1] = "/";
 	}
+	
+	if(_strcmp(args[1], "-")) {
+		_puts(getEnv("PWD"));
+		_puts("\n");
+
+		return;
+	}
 
 	res = chdir(args[1]);
 	
@@ -248,19 +359,20 @@ void reg_built_ins() {
 	
 	built_ins[3] = construct_built_in("clear", built_in_clear);
 	_puts("[3][REG] clear\n\n");
-	
+
 }
 
 
 
 int shell() {
+	int  i    = 0;
+	int  size = 0;
+	int  run  = 1;
+	int  result = 0;
+	char *buff;
 	
-	int size = 0;
-	int run = 1;
-	int result = 0;
-	char     *buff;
-	Command  *cmd;
-    
+	Command  **command_array;
+
     char **ENV_PATHS    = allocate_char_grid(BUFF_MAX, BUFF_MAX);
     int  ENV_PATHS_SIZE = get_tokenized_path(ENV_PATHS);
 
@@ -269,45 +381,52 @@ int shell() {
 	while(run)  
 	{
 		size = 0;
-
-		cmd  = alloc_cmd(BUFF_MAX);
-		buff = malloc(BUFF_MAX);
-		
+		buff           = malloc(BUFF_MAX);
 		prompt();
 
 		size = read_command(buff, BUFF_MAX);
 		
-		if(size > 0) {
+		if(size > 0) 
+		{
 				
-			parse_cmd(buff, cmd);
-			result = exec_builtin(cmd);
+			command_array = parse_commands(buff);
 			
-			if(!result) 
-			{
-				
-				if(find_cmd(cmd, ENV_PATHS, ENV_PATHS_SIZE) == 0) 
-				{
-					commands_exec(cmd);
-					_puts("\n");
-					continue;
-				}	
+			if(command_array == NULL) {
+				continue;
+			}
 
-				_fputs("\n", STDERR_FILENO);
-				_fputs("ERROR ", STDERR_FILENO);
-				_fputs("[ ", STDERR_FILENO);
-				_fputs(cmd->name, STDERR_FILENO);
-				_fputs(" ]\n", STDERR_FILENO);
+			for (i = 0; i < size; ++i)
+			{
+				result = exec_builtin(command_array[i]);
 				
-				perror("");
-				
-				_fputs("\n", STDERR_FILENO);
+				if(!result) 
+				{
+					
+					if(find_cmd(command_array[i], ENV_PATHS, ENV_PATHS_SIZE) == 0)
+					{
+						commands_exec(command_array[i]);
+						_puts("\n");
+						continue;
+					}
+
+					_fputs("\n", STDERR_FILENO);
+					_fputs("ERROR ", STDERR_FILENO);
+					_fputs("[ ", STDERR_FILENO);
+					_fputs(command_array[i]->name, STDERR_FILENO);
+					_fputs(" ]\n", STDERR_FILENO);
+					
+					perror("");
+					
+					_fputs("\n", STDERR_FILENO);
+				}	
 			}
 		}
+
+		free_cmd_grid(command_array);
 	}
 
 	free_char_grid(ENV_PATHS, ENV_PATHS_SIZE);
-	free(cmd);
-	free(buff);
-	
+	free_cmd_grid(command_array);
+	free(buff);	
 	return 0;
 }

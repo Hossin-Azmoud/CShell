@@ -2,11 +2,23 @@
 
 extern char **environ;
 
-int _fputchar(char c, int Stream) {
+int _fputchar(char c, int Stream)
+{
 	if(!c) return 0;
 	return (write(Stream, &c, 1));
 }
 
+int _fputi(int i, int Stream) {
+	
+	
+	int  n;
+	char *buff  = malloc(MAX_DIGIT);
+	buff[MAX_DIGIT] = '\0';
+	buff = __itoa(i, &buff);
+	n = _fputs(buff, Stream);
+	
+	return n;
+}
 
 char *getEnv(char *key) {
 	
@@ -85,6 +97,8 @@ char *setEnv(char *key, char *value)
 		_fputs("Could not set env: \n", STDERR_FILENO);
 		_fputs(new_var, STDERR_FILENO);
 		_fputs("\nmalloc failed to allocate.\n", STDERR_FILENO);
+		free_char_grid(new_environ, i);
+		
 		return NULL;
 	}
 
@@ -139,9 +153,10 @@ void unsetEnv(char *key)
 
 	if(!skipped)
 	{
-		_fputs("Could not unset env: \n", STDERR_FILENO);
+		_fputs("[ERROR] Could not unset env: \n", STDERR_FILENO);
 		_fputs(key, STDERR_FILENO);
-		_fputs("\nmalloc failed to allocate.\n", STDERR_FILENO);
+		_fputs("\nvariable Was not found. \n", STDERR_FILENO);
+		free_char_grid(new_environ, BUFF_MAX);
 		
 		return;
 	}
@@ -213,10 +228,12 @@ char **allocate_char_grid(int row, int col)
 void free_char_grid(char **grid, int row)
 {
 	int i;
+	char *ptr;
     
-    for (i = 0; i < row; i++) 
+    for (i = 0; i < row; ++i) 
     {
-    	free(grid[i]);
+    	ptr = grid[i];
+    	if(ptr) { free(ptr); }
     }
 
     free(grid);
@@ -286,22 +303,21 @@ int read_command(char *buff, int cap)
 		if(c == EOF || c == 0) {
 			exit(1);
 		}
-
-		if(c == '\n') {
-			break;
-		}
 		
 		if(cap == size + 1) {
 			buff = _realloc(buff, size + 1);
 			cap += 1;
 		}
 
+		if(c == '\n') 
+		{
+			buff[size] = '\0';
+			return size;
+		}
+
 		buff[cursor++] = (char) c;
 		size++;
 	}
-
-	buff[size] = '\0';
-	return size;
 }
 
 
@@ -317,27 +333,29 @@ int _cputs(char *s, char *color_seq) {
 
 char *__itoa(int n, char **buff)
 {
-	int  i          = 0;
 	int  size       = _strlen(*buff);
 	char *buff_ptr  = (*buff + size - 1);
 	
 	int is_signed  = 0;
 	
 	
+	
 	if(n < 0) {
 		is_signed = (int)(n < 0);
 		n = -n;
 	}
-
+	
 	if(n == 0) {
-		*buff[i++] = '0';
-		*buff[i]   = '\0';
 		
-		return *buff;
+		*buff_ptr-- = '0';
+		*buff_ptr--   = '\0';
+		*buff = buff_ptr + 1;
+		
+		return "0\0";
 	}
 
 	*buff_ptr-- = '\0';
-	
+	printf("BUUUUG! itoa 2\n");
 
 	for(; 1;(n = (n / 10)), *buff_ptr--)  {
 		
