@@ -295,18 +295,43 @@ void built_in_clear(char **args, int count) {
 
 void built_in_cd(char **args, int count) {
 	int res;
+	char *pwd  = getEnv("PWD");
 	
+	if(pwd == NULL) {
+		_fputs("Could not get pwd env variable.\n", STDERR_FILENO);
+		_fputs("Please check if it is set by the env command. if not then set it.\n", STDERR_FILENO);
+		return;
+	}
+
+	char *prev = getEnv("OLDPWD");
+	
+	if(prev == NULL) {
+		prev = pwd;
+	}
+
 	if(count == 1) {
 		args[1] = "/";
 	}
 	
 	if(_strcmp(args[1], "-")) {
-		_puts(getEnv("PWD"));
+		_puts(prev);
 		_puts("\n");
+		res = chdir(prev);
+		
+		if (res != 0)
+		{
+			_puts(args[1]);
+			_putchar(' ');
+			perror(":");
+		}
 
+		setEnv("PWD", prev);
+		setEnv("OLDPWD", pwd);
 		return;
 	}
 
+	setEnv("OLDPWD", pwd);
+	
 	res = chdir(args[1]);
 	
 	if (res != 0)
@@ -314,7 +339,10 @@ void built_in_cd(char **args, int count) {
 		_puts(args[1]);
 		_putchar(' ');
 		perror(":");
+		return;
 	}
+
+	setEnv("PWD", args[1]);
 }
 
 int exec_builtin(Command *cmd) {
