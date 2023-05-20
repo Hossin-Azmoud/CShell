@@ -10,11 +10,18 @@ Command *alloc_cmd(int cap)
 	Command *cmd = malloc(sizeof(Command));	
 	
 	cmd->name    = (char*) malloc(cap);
-	cmd->argv    = (char**) malloc(cap) + 1;
+	cmd->argv    = (char**) malloc(cap + 1);
 	cmd->cap     = cap; 
 	cmd->argc    = 0;	
 	
 	return cmd;
+}
+
+void free_cmd(Command *cmd) 
+{
+	free(cmd->argv);
+	free(cmd->name);
+	free(cmd);
 }
 
 Command **alloc_cmds_buffer(int cap) 
@@ -25,7 +32,10 @@ Command **alloc_cmds_buffer(int cap)
 
 	for(it = 0; it < COMMAND_MAX; ++it)
 	{
-		grid[it] = alloc_cmd(cap);
+		grid[it]->name    = (char*) malloc(cap);
+		grid[it]->argv    = (char**) malloc(cap + 1);
+		grid[it]->cap     = cap; 
+		grid[it]->argc    = 0;		
 	}
 
 	return grid;
@@ -39,9 +49,7 @@ void free_cmd_grid(Command **grid)
 
 	for(it = 0;grid[it] != NULL; ++it)
 	{
-		free(grid[it]->argv);
-		free(grid[it]->name);
-		free(grid[it]);
+		free_cmd(grid[it]);
 	}
 
     free(grid);
@@ -50,8 +58,10 @@ void free_cmd_grid(Command **grid)
 void realloc_cmd(Command *cmd)
 {
 	
-	Command *tmp = alloc_cmd(cmd->cap + BUFF_MAX);	
+	Command *tmp = alloc_cmd(cmd->cap + BUFF_MAX);
+	
 	int i;
+	
 	tmp->name = cmd->name;
 	
 	for (i = 0; i < cmd->argc; ++i)
@@ -314,6 +324,7 @@ void built_in_cd(char **args, int count) {
 	}
 	
 	if(_strcmp(args[1], "-")) {
+		
 		_puts(prev);
 		_puts("\n");
 		res = chdir(prev);
