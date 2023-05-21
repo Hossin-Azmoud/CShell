@@ -43,8 +43,9 @@ char *getEnv(char *key) {
 		{
 			return v;
 		}
-
-		free(copy);
+		if(copy != NULL) {
+			free(copy);
+		}
 	}
 
 	return NULL;
@@ -75,7 +76,7 @@ char *setEnv(char *key, char *value)
 			max_col = col_size;
 		}
 		
-		printf("[%i] %i\n", i, col_size);
+		/* printf("[%i] %i\n", i, col_size); */
 
 
 		copy = malloc(col_size);
@@ -91,9 +92,11 @@ char *setEnv(char *key, char *value)
 			
 			new_var = join(k, value, "=");
 			_strcpy(environ[i], new_var);
-			
+			free(copy);	
 			return v;
 		}
+
+		free(copy);
 	}
 	
 	new_var      =  join(key, value, "=");

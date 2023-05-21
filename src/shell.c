@@ -2,7 +2,7 @@
 
 static built_in_command built_ins[MAX_BUILT_IN_COUNT] = { 0 };
 static int BUILT_INS_COUNT = 0;
-static int COMMAND_MAX     = 10;
+static int COMMAND_MAX     = 5;
 extern char **environ;
 
 Command *alloc_cmd(int cap) 
@@ -339,7 +339,7 @@ void built_in_cd(char **args, int count) {
 	char *pwd              = getEnv("PWD");
 	char *prev             = getEnv("OLDPWD");
 
-	if(pwd == NULL) 
+	if(pwd == NULL)
 	{
 		_fputs("Could not get pwd env variable.\n", STDERR_FILENO);
 		_fputs("Please check if it is set by the env command. if not then set it.\n", STDERR_FILENO);
@@ -353,7 +353,18 @@ void built_in_cd(char **args, int count) {
 
 	if(count == 1) 
 	{
-		args[1] = "/";
+		res = chdir(ROOT);
+		
+		
+		if(res != 0)
+		{
+			perror("[ERROR (CD)]");
+			return;
+		}
+
+		setEnv("PWD",    ROOT);
+		setEnv("OLDPWD", pwd);
+		return;
 	}
 	
 	if(_strcmp(args[1], "-")) 
@@ -371,7 +382,7 @@ void built_in_cd(char **args, int count) {
 			perror(":");
 		}
 
-		setEnv("PWD", prev);
+		setEnv("PWD",    prev);
 		setEnv("OLDPWD", pwd);
 		return;
 	}
@@ -388,13 +399,15 @@ void built_in_cd(char **args, int count) {
 	}
 
 	while(getcwd(dir_post_buffer, size) == NULL) {
-		free(dir_post_buffer);
 		size += 1;
 		dir_post_buffer = malloc(size);
 	}
 
 	setEnv("PWD", dir_post_buffer);
-	free(dir_post_buffer);
+	
+	if(dir_post_buffer != NULL) {
+		free(dir_post_buffer);	
+	}
 }
 
 int exec_builtin(Command *cmd) {
@@ -487,7 +500,6 @@ int shell() {
 			
 			if(!result) 
 			{
-				
 				if(find_cmd(command_array[i], ENV_PATHS, ENV_PATHS_SIZE) == 0)
 				{
 					commands_exec(command_array[i]);

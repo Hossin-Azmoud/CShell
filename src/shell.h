@@ -8,10 +8,12 @@
 #include "util.h"
 
 #define MAX_BUILT_IN_COUNT 16
-#define CLEAR_BYTES        "\033[2J"
-#define SEMI_COLON ";"
-#define MAX_ARGS  20
-#define MAX_PATH 512
+#define MAX_ARGS           20
+#define MAX_PATH           512
+
+#define CLEAR_BYTES "\033[2J"
+#define SEMI_COLON  ";"
+#define ROOT        "/"
 
 typedef struct Command {
 	char *name;
@@ -24,7 +26,6 @@ typedef struct built_in_command {
 	char *name;
 	void (*func)(char **, int);
 } built_in_command;
-
 
 built_in_command construct_built_in(char *name, void (*func)(char **, int));
 void     built_in_exit(char **args, int count);

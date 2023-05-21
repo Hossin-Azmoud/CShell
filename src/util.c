@@ -13,17 +13,21 @@
 
 void prompt() {
 	char *user_name = getEnv("USER");
-	
+	char *pwd       = getEnv("PWD");
 	if(user_name) {
 		_putchar('[');
 		_cputs(user_name, STD_YELLOW);
 		_putchar(']');
+		_putchar('[');
+		_cputs(pwd, STD_MAGINTA);
+		_putchar(']');
+		_putchar('\n');
 		_cputs(" >>> ", STD_CYAN);
 		return;
 	}
 
 	_fputs("Could not find USER env variable. please check if it is set.\n", STDERR_FILENO);
-	exit(1);	
+	exit(1);
 }
 
 char *getpath() {
