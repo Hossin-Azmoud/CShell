@@ -7,33 +7,54 @@ extern char **environ;
 
 Command *alloc_cmd(int cap) 
 {
-	Command *cmd = malloc(sizeof(Command));	
+	int i;
+	Command *cmd = malloc(sizeof(Command));
 	
 	cmd->name    = (char*) malloc(cap);
-	cmd->argv    = (char**) malloc(cap + 1);
-	cmd->cap     = cap; 
-	cmd->argc    = 0;	
+	cmd->argv = (char**) malloc((MAX_ARGS + 1) * sizeof(char*));
+	
+	for(i = 0; i < MAX_ARGS; i++ ) 
+	{
+		cmd->argv[i] = (char*)malloc(cap + 1);
+	}
+
+	cmd->cap     = cap;
+	cmd->argc    = 0;
 	
 	return cmd;
 }
 
 void free_cmd(Command *cmd) 
 {
+	int i;
+
+	for(i = 0; i < MAX_ARGS; i++ )
+	{
+	  free(cmd->argv[i]);
+	}
+
 	free(cmd->argv);
 	free(cmd->name);
 	free(cmd);
 }
 
-Command **alloc_cmds_buffer(int cap) 
+Command  **alloc_cmds_buffer(int cap) 
 {
 	
-	int  it;
+	int  it, i;
 	Command **grid = (Command**) malloc(COMMAND_MAX * sizeof(Command *));
 
 	for(it = 0; it < COMMAND_MAX; ++it)
 	{
+		grid[it]          = malloc(sizeof(Command));
 		grid[it]->name    = (char*) malloc(cap);
-		grid[it]->argv    = (char**) malloc(cap + 1);
+		
+		grid[it]->argv = (char**) malloc((MAX_ARGS + 1) * sizeof(char*));
+
+		for( i=0; i < MAX_ARGS; i++ ) {
+		  grid[it]->argv[i] = (char*)malloc(cap + 1);
+		}
+
 		grid[it]->cap     = cap; 
 		grid[it]->argc    = 0;		
 	}
@@ -74,13 +95,18 @@ void realloc_cmd(Command *cmd)
 
 Command **parse_commands(char *buff)
 {
+
 	char     *command_buff;
 	int      size = 0;
 	int      it = 0;
 	int      j  = 0;
 	Command  *command_cp;
-	Command  **cmd    = alloc_cmds_buffer(COMMAND_MAX);
-	char     **tokens = allocate_char_grid(COMMAND_MAX, BUFF_MAX);
+	Command  **cmd;
+	char     **tokens;
+	cmd     = alloc_cmds_buffer(COMMAND_MAX);
+	tokens  = allocate_char_grid(COMMAND_MAX, BUFF_MAX);
+
+
 	command_buff = strtok(buff, ";");
 	
 	while(command_buff != NULL) 
@@ -99,41 +125,43 @@ Command **parse_commands(char *buff)
 		
 
 		_strcpy(tokens[size], command_buff);
-		printf("Toked: %s\n", tokens[size]);
 		size++;
 		command_buff = strtok(NULL, ";");
 	}
 
+
 	tokens[size] = NULL;
+	
 
 	for(it = 0; it < size; it++) 
 	{
-		printf("Parsing..: %s\n", tokens[it]);
-		
 		command_cp = alloc_cmd(BUFF_MAX);
-		
+
 		if(parse_command(tokens[it], command_cp) == 0) 
 		{
-			_strcpy(cmd[it]->name, command_cp->name);
+			cmd[it]->name = _strcpy(cmd[it]->name, command_cp->name);
 			
 			for(j = 0; j < command_cp->argc; ++j)
 			{
-				_strcpy(cmd[it]->argv[j], command_cp->argv[j]);
+				cmd[it]->argv[j] = _strcpy(cmd[it]->argv[j], command_cp->argv[j]);
 			}
-			
-			cmd[it]->argc = j;
-			printf("Parsed: %s\n", cmd[it]->name);
-			free(command_cp);
+			cmd[it]->argv[j] = NULL;
+			cmd[it]->argc    = j;
+			cmd[it]->cap     = BUFF_MAX;
+
+			free_cmd(command_cp);
 			continue;
 		}
 
-		free(command_cp);
+		free_cmd(command_cp);
 		_fputs("[PARSE ERROR] a command could not be parsed.\n", STDERR_FILENO);
 		return NULL;
 	}
-
+	
 	cmd[it] = NULL;
+	
 	free_char_grid(tokens, size);
+	
 	return cmd;
 }
 
@@ -142,8 +170,8 @@ Command **parse_commands(char *buff)
 int parse_command(char *buff, Command *cmd) 
 {
 	char *cp = malloc(BUFF_MAX);
-	char *Token;	
-	int  len;
+	char *Token;
+	
 	_strcpy(cp, buff);
 	Token = strtok(cp, " ");
 	
@@ -151,18 +179,15 @@ int parse_command(char *buff, Command *cmd)
 
     while(Token != NULL)
     {
-    	len = _strlen(Token);
-    	
-    	Token[len] = '\0';
-    	
     	if(cmd->argc == 0) {
     		_strcpy(cmd->name, Token);
     	}
 
     	_strcpy(cmd->argv[cmd->argc++], Token);
         
-        if(cmd->argc == cmd->cap) 
+        if(cmd->argc == 30)
         {
+        	printf("Realloc..\n");
         	realloc_cmd(cmd); /* reallocate another.. */
         }
 
@@ -170,21 +195,23 @@ int parse_command(char *buff, Command *cmd)
     }
 
     cmd->argv[cmd->argc] = NULL;
-    
     free(cp);
+
     return 0;
 }
 
 void print_command(Command *c) {
 	
 	int i;
-	
-	_puts("--------PARSED COMMAND---------\n");
-	_puts("name: ");
+
+	_puts("Name: |");
 	_puts(c->name);
+	_puts("|");
 	_puts("\n");
+	_puts("Argv: ");
 	
-	for(i = 1; i < c->argc; i++) {
+	for(i = 0; i < c->argc; i++) 
+	{
 		_puts(c->argv[i]);
 		_puts(" ");
 	}
@@ -199,18 +226,17 @@ void commands_exec(Command *cmd) {
 	/* signal(SIGQUIT, handle_signal); Sync */
 	
 	pid = fork();
+	
 	if(pid == 0)
 	{
 		/* Child Process. */
-		
 		_putchar('\n');
+
 		code = execve(cmd->name, cmd->argv, environ);
-		printf("Exex\n");
+
 		if(code == -1) 
 		{
-			print_command(cmd);
-			
-			perror("");
+			perror("[ERROR]");
 			_putchar('\n');
 			exit(0);
 		}
@@ -239,12 +265,13 @@ int find_cmd(Command *c, char **paths, int size) {
 	{
 		copy = malloc(_strlen(paths[i]) + _strlen(c->name) + 1);
 		_strcpy(copy, paths[i]);
-		copy = join_path(copy, c->name);		
+		copy = join_path(copy, c->name);
 		res = access(copy, X_OK);
 		
 		if(res != -1)
 		{
-			c->name = copy;
+			_strcpy(c->name   , copy);
+			/* _strcpy(c->argv[0], copy); */
 			return 0;
 		}
 
@@ -304,29 +331,37 @@ void built_in_clear(char **args, int count) {
 }
 
 void built_in_cd(char **args, int count) {
-	int res;
-	char *pwd  = getEnv("PWD");
 	
-	if(pwd == NULL) {
+	int res;
+	int size = 12;
+	
+	char *dir_post_buffer;
+	char *pwd              = getEnv("PWD");
+	char *prev             = getEnv("OLDPWD");
+
+	if(pwd == NULL) 
+	{
 		_fputs("Could not get pwd env variable.\n", STDERR_FILENO);
 		_fputs("Please check if it is set by the env command. if not then set it.\n", STDERR_FILENO);
 		return;
 	}
-
-	char *prev = getEnv("OLDPWD");
 	
-	if(prev == NULL) {
+	if(prev == NULL) 
+	{
 		prev = pwd;
 	}
 
-	if(count == 1) {
+	if(count == 1) 
+	{
 		args[1] = "/";
 	}
 	
-	if(_strcmp(args[1], "-")) {
+	if(_strcmp(args[1], "-")) 
+	{
 		
 		_puts(prev);
 		_puts("\n");
+		
 		res = chdir(prev);
 		
 		if (res != 0)
@@ -342,10 +377,9 @@ void built_in_cd(char **args, int count) {
 	}
 
 	setEnv("OLDPWD", pwd);
-	
 	res = chdir(args[1]);
 	
-	if (res != 0)
+	if(res != 0)
 	{
 		_puts(args[1]);
 		_putchar(' ');
@@ -353,16 +387,25 @@ void built_in_cd(char **args, int count) {
 		return;
 	}
 
-	setEnv("PWD", args[1]);
+	while(getcwd(dir_post_buffer, size) == NULL) {
+		free(dir_post_buffer);
+		size += 1;
+		dir_post_buffer = malloc(size);
+	}
+
+	setEnv("PWD", dir_post_buffer);
+	free(dir_post_buffer);
 }
 
 int exec_builtin(Command *cmd) {
 	
+	built_in_command command;
 	int i = 0;	
 	
 	for(i = 0; i < BUILT_INS_COUNT; ++i)
 	{
-		built_in_command command = built_ins[i];
+		
+		command = built_ins[i];
 		
 		if(_strcmp(command.name, cmd->name)) {
 			command.func(cmd->argv, cmd->argc);
@@ -420,45 +463,48 @@ int shell() {
 	while(run)  
 	{
 		size = 0;
-		buff           = malloc(BUFF_MAX);
+		buff = malloc(BUFF_MAX);
 		prompt();
 
 		size = read_command(buff, BUFF_MAX);
-		
-		if(size > 0) 
+		if(size == 0)
 		{
-				
-			command_array = parse_commands(buff);
+			continue;
+		}
+		
+		command_array = parse_commands(buff);
+		
+		if(command_array == NULL) 
+		{
+			free_cmd_grid(command_array);
+			free(buff);
+			continue;
+		}
+
+		for (i = 0; (i < size && command_array[i]); ++i)
+		{
+			result = exec_builtin(command_array[i]);
 			
-			if(command_array == NULL) {
-				continue;
-			}
-
-			for (i = 0; i < size; ++i)
+			if(!result) 
 			{
-				result = exec_builtin(command_array[i]);
 				
-				if(!result) 
+				if(find_cmd(command_array[i], ENV_PATHS, ENV_PATHS_SIZE) == 0)
 				{
-					
-					if(find_cmd(command_array[i], ENV_PATHS, ENV_PATHS_SIZE) == 0)
-					{
-						commands_exec(command_array[i]);
-						_puts("\n");
-						continue;
-					}
+					commands_exec(command_array[i]);
+					_puts("\n");
+					continue;
+				}
 
-					_fputs("\n", STDERR_FILENO);
-					_fputs("ERROR ", STDERR_FILENO);
-					_fputs("[ ", STDERR_FILENO);
-					_fputs(command_array[i]->name, STDERR_FILENO);
-					_fputs(" ]\n", STDERR_FILENO);
-					
-					perror("");
-					
-					_fputs("\n", STDERR_FILENO);
-				}	
-			}
+				_fputs("\n", STDERR_FILENO);
+				_fputs("ERROR ", STDERR_FILENO);
+				_fputs("[ ", STDERR_FILENO);
+				_fputs(command_array[i]->name, STDERR_FILENO);
+				_fputs(" ]\n", STDERR_FILENO);
+				
+				perror("");
+				
+				_fputs("\n", STDERR_FILENO);
+			}	
 		}
 
 		free_cmd_grid(command_array);

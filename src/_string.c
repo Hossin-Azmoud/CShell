@@ -13,7 +13,8 @@ int _strlen(char *s) {
 	return len;
 }
 
-char *_strcpy(char *dst, char *src) {
+char *_strcpy(char *dst, char *src) 
+{
 	
 	char *dst_start = dst;
 	
@@ -29,6 +30,7 @@ char *_strcpy(char *dst, char *src) {
 	*dst = '\0';
 	return dst_start;
 }
+
 /*
 char *_strcat(char *dst, char *src) {
 
@@ -55,7 +57,7 @@ char *_strcat(char *dst, char *src)
 	int sz  = _strlen(dst) + _strlen(src) + 1; 
 	int end = _strlen(dst);
 	
-	dst = _realloc(dst, sz);
+	dst = _realloc(dst, sz + 1);
 	
 	while(*src)
 	{

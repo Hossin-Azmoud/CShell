@@ -10,6 +10,8 @@
 #define MAX_BUILT_IN_COUNT 16
 #define CLEAR_BYTES        "\033[2J"
 #define SEMI_COLON ";"
+#define MAX_ARGS  20
+#define MAX_PATH 512
 
 typedef struct Command {
 	char *name;
@@ -31,7 +33,8 @@ void     built_in_cd(char **args, int count);
 void     commands_exec(Command *cmd);
 
 Command  **parse_commands(char *buff);
-int      parse_command(char *buff, Command *cmd);
+int parse_command(char *buff, Command *cmd);
+
 
 Command  *alloc_cmd(int cap);
 void     free_cmd(Command *cmd);

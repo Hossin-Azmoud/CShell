@@ -27,13 +27,12 @@ char *getEnv(char *key) {
 	char *k    = { 0 };
 	char *v    = { 0 };
 	char *copy;
-
+	
 	for(i = 0; environ[i] != NULL; i++) 
 	{
 		
 		size = _strlen(environ[i]);
-		
-		copy = malloc(size);
+		copy = malloc(size + 1);
 
 		_strcpy(copy, environ[i]);
 
@@ -65,17 +64,22 @@ char *setEnv(char *key, char *value)
 	char *k        = { 0 };
 	char *v        = { 0 };
 
-	for(i = 0; environ[i] != NULL; i++)
+	for(i = 0; environ[i]; ++i)
 	{
 
 		col_size = _strlen(environ[i]);
+		
 		
 		if(col_size > max_col) 
 		{
 			max_col = col_size;
 		}
 		
+		printf("[%i] %i\n", i, col_size);
+
+
 		copy = malloc(col_size);
+		
 		_strcpy(copy, environ[i]);
 
 		k = strtok(copy, "=");
@@ -83,8 +87,11 @@ char *setEnv(char *key, char *value)
 		
 		if(_strcmp(k, key)) /* found. */
 		{
-			new_var = join(key, value, "=");
-			_strcpy(environ[i], new_var); /* Key = Value */
+			
+			
+			new_var = join(k, value, "=");
+			_strcpy(environ[i], new_var);
+			
 			return v;
 		}
 	}
@@ -98,7 +105,6 @@ char *setEnv(char *key, char *value)
 		_fputs(new_var, STDERR_FILENO);
 		_fputs("\nmalloc failed to allocate.\n", STDERR_FILENO);
 		free_char_grid(new_environ, i);
-		
 		return NULL;
 	}
 
@@ -114,8 +120,6 @@ char *setEnv(char *key, char *value)
 		_strcpy(new_environ[i - 1], environ[i - 1]);
 		i--;
 	}
-
-	
 	
 	environ = new_environ;
 
@@ -195,10 +199,15 @@ int _puts(char *s) {
 	return _fputs(s, STDOUT_FILENO);
 }
 
-char *_realloc(char *ptr, int size) {
+char *_realloc(char *ptr, int size) 
+{
 	
-	char *new       = malloc(size);
-	char *new_start = new;
+	char *new;
+	char *new_start;
+	new = malloc(size);
+	
+	
+	new_start = new;
 	
 	if(new == NULL) {
 		return NULL;
@@ -209,6 +218,8 @@ char *_realloc(char *ptr, int size) {
 		*new++ = *ptr++;
 	}
 	
+	*new = '\0';
+
 	return new_start;
 }
 
@@ -232,7 +243,7 @@ void free_char_grid(char **grid, int row)
     
     for (i = 0; i < row; ++i) 
     {
-    	ptr = grid[i];
+    	ptr = grid[i]; 
     	if(ptr) { free(ptr); }
     }
 
@@ -300,6 +311,17 @@ int read_command(char *buff, int cap)
 			continue;
 		}
 		
+		if(c == '\n') 
+		{
+			if(size > 0)
+			{
+				buff[size] = '\0';
+			}
+
+			return size;
+			
+		}
+
 		if(c == EOF || c == 0) {
 			exit(1);
 		}
@@ -307,12 +329,6 @@ int read_command(char *buff, int cap)
 		if(cap == size + 1) {
 			buff = _realloc(buff, size + 1);
 			cap += 1;
-		}
-
-		if(c == '\n') 
-		{
-			buff[size] = '\0';
-			return size;
 		}
 
 		buff[cursor++] = (char) c;

@@ -40,10 +40,9 @@ char *getpath() {
 }
 
 char *join_path(char *dst, char *src)
-{
-
+{	
 	
-	int dst_last = _strlen(dst) - 1;
+	int dst_last = _strlen(dst) - 1;	
 	
 	if(dst[dst_last] != '/')
 	{
