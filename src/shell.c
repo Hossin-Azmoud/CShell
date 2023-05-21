@@ -190,7 +190,7 @@ int parse_command(char *buff, Command *cmd)
         	printf("Realloc..\n");
         	realloc_cmd(cmd); /* reallocate another.. */
         }
-
+        
         Token = strtok(NULL, " ");
     }
 
@@ -230,8 +230,6 @@ void commands_exec(Command *cmd) {
 	if(pid == 0)
 	{
 		/* Child Process. */
-		_putchar('\n');
-
 		code = execve(cmd->name, cmd->argv, environ);
 
 		if(code == -1) 
@@ -241,7 +239,6 @@ void commands_exec(Command *cmd) {
 			exit(0);
 		}
 
-		_putchar('\n');
 		exit(0);
 	}
 	
@@ -503,7 +500,6 @@ int shell() {
 				if(find_cmd(command_array[i], ENV_PATHS, ENV_PATHS_SIZE) == 0)
 				{
 					commands_exec(command_array[i]);
-					_puts("\n");
 					continue;
 				}
 

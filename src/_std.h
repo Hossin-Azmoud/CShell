@@ -67,5 +67,6 @@ char  *__itoa(int n, char **buff);
 int   __atoi(char *buff);
 void  unsetEnv(char *key);
 int   _fputi(int i, int Stream);
+char  *_strtok(char *str, const char *delim);
 
 #endif /* __STD__H */

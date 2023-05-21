@@ -374,7 +374,6 @@ char *__itoa(int n, char **buff)
 	}
 
 	*buff_ptr-- = '\0';
-	printf("BUUUUG! itoa 2\n");
 
 	for(; 1;(n = (n / 10)), *buff_ptr--)  {
 		
@@ -420,4 +419,10 @@ int __atoi(char *buff) {
 	}
 
 	return n;
+}
+
+
+char  *_strtok(char *str, const char *delim) 
+{
+	assert(0 && "Not implemented!");
 }
