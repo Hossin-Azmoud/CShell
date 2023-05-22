@@ -5,9 +5,9 @@ static int BUILT_INS_COUNT                            = 0;
 static int COMMAND_MAX                                = 20;
 const  char ctx_array[CONTEXT_COUNT] = { ';', '&', '|' };
 extern char **environ;
-
 static char **ENV_PATHS    = { 0 };
 static int  ENV_PATHS_SIZE = 0;
+static int  RUN_FLAG       = 1;
 
 
 Command *alloc_cmd(int cap)
@@ -413,16 +413,16 @@ int find_cmd(Command *c, char **paths, int size) {
 }
 
 
-void built_in_exit(char **args, int count) {
-	int code = 0;
-
+void built_in_exit(char **args, int count) 
+{
 	if(count > 1)
 	{
-		code = __atoi(args[1]);
-		printf("Exiting with %s, %i\n", args[1], code);
+		RUN_FLAG = __atoi(args[1]);
+		return;
 	}
+	
+	RUN_FLAG = 0;
 
-	exit(code);
 }
 
 void built_in_env(char **args, int count) {
@@ -628,7 +628,6 @@ void execute_and(Command **command_array, int size) {
 	}
 }
 
-
 void execute_or(Command **command_array, int size) {
 	int i, prev_code;
 	
@@ -672,21 +671,21 @@ int execute_command(Command *cmd)
 
 int shell() {
 	int  size = 0;
-	int  run  = 1;
 	char *buff;
+	int  buff_size = BUFF_MAX;
 	EContext ctx = NONE;
 	Command  **command_array;
 
 	init();
 	
-	while(run)  
+	while(RUN_FLAG == 1)
 	{
 		ctx = NONE;
 		size = 0;
-		buff = malloc(BUFF_MAX);
+		buff = malloc(buff_size);
 		prompt();
 		
-		size = read_command(buff, BUFF_MAX);
+		size = _getline(buff, &buff_size, stdin);
 		
 		if(size == 0)
 		{
@@ -704,22 +703,18 @@ int shell() {
 
 		switch(ctx) 
 		{
-
 			case JOIN: {
 				/* Execute the sequence No matter what happens to next and prev commands? */
-				printf(" JOIN \n");
 				execute_joined(command_array, size);
 			} break;
 
 			case AND: {
 				/* Commands were joined with &&, thus we need to execute sequence in this manner, if the nth - 1 command did not fail we execute nth.*/
-				printf(" AND \n");
 				execute_and(command_array, size);
 			} break;
 
 			case OR: {
-				/* Commands were joined with &&, thus we need to execute sequence in this manner, if the nth - 1 command failed we execute nth.*/
-				printf(" OR \n");
+				/* Commands were joined with &&, thus we need to execute sequence in this manner, if the nth - 1 command failed we execute nth.*/				
 				execute_or(command_array, size);
 			} break;
 
@@ -734,12 +729,9 @@ int shell() {
 		}
 		
 		free_cmd_grid(command_array);
+		free(buff);	
 	}
 
 	deinit();
-	
-	free_cmd_grid(command_array);
-	free(buff);	
-	
-	return 0;
+	exit(RUN_FLAG);
 }

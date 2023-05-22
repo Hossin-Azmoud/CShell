@@ -61,11 +61,13 @@ char  **allocate_char_grid(int row, int col);
 void  free_char_grid(char **grid, int row);
 char  *_realloc(char *ptr, int size);
 int   read_command(char *buff, int cap);
+int   _getline(char *buff, int *n, FILE *Stream);
 char  *getEnv(char *key);
 char  *setEnv(char *key, char *value);
 char  *__itoa(int n, char **buff);
 int   __atoi(char *buff);
 void  unsetEnv(char *key);
 int   _fputi(int i, int Stream);
+
 
 #endif /* __STD__H */

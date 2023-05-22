@@ -396,10 +396,11 @@ char *__itoa(int n, char **buff)
 
 int __atoi(char *buff) {
     
-    int n = 0;
-    size_t len = strlen(buff);
+    int n      = 0;
+    int len    = _strlen(buff);
     int digit_ = 1;
-	
+
+
 	for(; len > 0; len--)
 	{
 		
@@ -418,5 +419,100 @@ int __atoi(char *buff) {
 		digit_ *= 10;
 	}
 
+	
 	return n;
+}
+
+
+int _getline(char *buff, int *n, FILE *Stream)
+{
+	int  Stream_fd  = fileno(Stream);
+	int  run        = 1;
+	int  size       = 0;
+	int  cursor     = 0;
+	int  c          = 0;
+	char Seq[3];	
+	
+	while(run)
+	{
+		read(Stream_fd, &c, 1);
+		
+		if(*n == size + 1) 
+		{
+			*n = (*(n) * 2); /* Double the size. */
+			buff = _realloc(buff, *n);
+		}
+
+		switch(c) 
+		{
+			case '\n': {
+				
+				run = 0;
+				continue;
+			} break;
+			case 0:    { exit(1); } break;
+			case EOF:  { exit(1); } break;
+			case SEQ_START_BYTE: {
+				
+				read(STDIN_FILENO, &Seq[0], 1);
+				read(STDIN_FILENO, &Seq[1], 1);
+			
+				if (Seq[0] == SEQ_SEC_BYTE) 
+				{
+					switch(Seq[1]) 
+					{
+						case UP_KEY: {
+							_puts("U Clicked `Up_key`!");
+						} break;
+						case DOWN_KEY: {
+							_puts("U Clicked `Down_key`!");
+						} break;
+						case RIGHT_KEY: {
+							if(cursor < size) {
+								cursor++;
+							}
+							
+							fseek(stdin, cursor, SEEK_SET);
+						
+						} break;
+						case LEFT_KEY: {
+							if(cursor > 0) {
+								cursor--;
+							}
+
+							fseek(stdin, cursor, SEEK_SET);
+						} break;
+						case END_KEY: {
+							cursor = size - 1;
+							_puts("U Clicked `End_key`!");
+						} break;
+						case HOME_KEY: {
+							cursor = 0;
+							_puts("U Clicked `Home_key`!");
+						} break;
+						default: {
+							_puts("U Clicked `Unkown key.`!");
+							printf("%i\n", Seq[1]);
+						}
+					}
+					
+					continue;
+				}
+
+				continue;
+			} break;
+			
+			default: {
+				buff[cursor++] = (char) c;
+				size++;
+			}
+		}
+	}
+
+	if(size > 0)
+	{
+		buff[size] = '\0';
+	}
+
+	return size;
 }
