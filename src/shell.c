@@ -40,6 +40,7 @@ void free_cmd(Command *cmd)
 
 	free(cmd->argv);
 	free(cmd->name);
+	
 	free(cmd);
 }
 
@@ -65,17 +66,17 @@ Command  **alloc_cmds_buffer(int cap)
 	}
 
 	return grid;
-
 }
 
 void free_cmd_grid(Command **grid)
 {
 	
 	int it;
-
-	for(it = 0;grid[it] != NULL; ++it)
+	
+	while(grid[it] != NULL)
 	{
 		free_cmd(grid[it]);
+		it++;
 	}
 
     free(grid);
@@ -83,7 +84,6 @@ void free_cmd_grid(Command **grid)
 
 void realloc_cmd(Command *cmd)
 {
-	
 	Command *tmp = alloc_cmd(cmd->cap + BUFF_MAX);
 	
 	int i;
@@ -115,7 +115,7 @@ int expect_chr(char found, char expected) /* 1: On sucess, 0: Failed*/
 	return 0;
 }
 
-Command **parse_commands(char *buff, EContext *ctx)
+int parse_commands(char *buff, EContext *ctx, Command **cmd)
 {
 	char     *command_buff;
 	
@@ -126,11 +126,7 @@ Command **parse_commands(char *buff, EContext *ctx)
 	int j           = 0;
 	
 	Command  *command_cp;
-	Command  **cmd;
-	
 	char **tokens;
-
-	cmd          = alloc_cmds_buffer(COMMAND_MAX);
 	tokens       = allocate_char_grid(COMMAND_MAX, BUFF_MAX);
 	command_buff = malloc(BUFF_MAX);
 
@@ -152,8 +148,8 @@ Command **parse_commands(char *buff, EContext *ctx)
 					free(command_buff);
 					free_char_grid(tokens, COMMAND_MAX);
 					free_cmd_grid(cmd);
-					
-					return NULL;
+
+					return 0;
 				}
 				
 				buff++;
@@ -176,7 +172,7 @@ Command **parse_commands(char *buff, EContext *ctx)
 					free_char_grid(tokens, COMMAND_MAX);
 					free_cmd_grid(cmd);
 
-					return NULL;
+					return 0;
 				}
 
 				buff++;
@@ -186,7 +182,7 @@ Command **parse_commands(char *buff, EContext *ctx)
 					free(command_buff);
 					free_char_grid(tokens, COMMAND_MAX);
 					free_cmd_grid(cmd);
-					return NULL;
+					return 0;
 				};
 
 				buff++;
@@ -208,7 +204,7 @@ Command **parse_commands(char *buff, EContext *ctx)
 					free(command_buff);
 					free_char_grid(tokens, COMMAND_MAX);
 					free_cmd_grid(cmd);
-					return NULL;
+					return 0;
 				}
 				
 				buff++;
@@ -218,7 +214,7 @@ Command **parse_commands(char *buff, EContext *ctx)
 					free(command_buff);
 					free_char_grid(tokens, COMMAND_MAX);
 					free_cmd_grid(cmd);
-					return NULL;
+					return 0;
 				};
 				
 				buff++;
@@ -232,6 +228,11 @@ Command **parse_commands(char *buff, EContext *ctx)
 				while(*buff && *buff != '&' && *buff != '\0' && *buff != '|' && *buff != ';' && *buff != '\n')
 				{
 					/*TODO: CHeck if the command buffer is enough to hold a new character.?*/
+					if(cmd_buff_sz + 1 == BUFF_MAX)
+					{
+						command_buff = _realloc(command_buff, (cmd_buff_sz * 2));
+					}
+					
 					command_buff[cmd_buff_sz++] = (char) *buff;
 					buff++;
 				}
@@ -247,18 +248,19 @@ Command **parse_commands(char *buff, EContext *ctx)
 					free(command_buff);
 					free_cmd_grid(cmd);
 					free_char_grid(tokens, COMMAND_MAX);
-					return NULL;
+					
+					return 0;
 				}
 				
 				_strcpy(tokens[size], command_buff);
+				
 				cmd_buff_sz = 0;
 				size++;
+				
 			};
-		}
-
-	 	
+		}	 	
 	}
-	
+
 	tokens[size] = NULL;
 
 	for(it = 0; it < size; it++) 
@@ -273,6 +275,7 @@ Command **parse_commands(char *buff, EContext *ctx)
 			{
 				cmd[it]->argv[j] = _strcpy(cmd[it]->argv[j], command_cp->argv[j]);
 			}
+			
 			cmd[it]->argv[j] = NULL;
 			cmd[it]->argc    = j;
 			cmd[it]->cap     = BUFF_MAX;
@@ -282,15 +285,15 @@ Command **parse_commands(char *buff, EContext *ctx)
 		}
 
 		free_cmd(command_cp);
+		free_cmd_grid(cmd);
 		_fputs("[PARSE ERROR] a command could not be parsed.\n", STDERR_FILENO);
-		return NULL;
+		return 0;
 	}
 	
 	cmd[it] = NULL;
-	
 	free_char_grid(tokens, size);
-	free(command_buff);
-	return cmd;
+
+	return it;
 }
 
  
@@ -541,10 +544,11 @@ void built_in_cd(char **args, int count) {
 	}
 }
 
-int exec_builtin(Command *cmd) {
-	
+int exec_builtin(Command *cmd) 
+{
 	built_in_command command;
-	int i = 0;	
+
+	int i = 0;
 	
 	for(i = 0; i < BUILT_INS_COUNT; ++i)
 	{
@@ -560,48 +564,54 @@ int exec_builtin(Command *cmd) {
 	return 0;
 }
 
-built_in_command construct_built_in(char *name, void (*func)(char **, int)) {
+void construct_built_in(char *name, void (*func)(char **, int), built_in_command *ptr) 
+{
+	_strcpy((*ptr).name, name);
 	
-	built_in_command *command = malloc(sizeof(built_in_command));
-	
-	command->name = name;
-	command->func = func;
+	(*ptr).func = func;
 	
 	BUILT_INS_COUNT++;
-	
-	return *command;
 }
 
 void reg_built_ins() {
 	
-	ENV_PATHS      = allocate_char_grid(BUFF_MAX, BUFF_MAX);
-	ENV_PATHS_SIZE = get_tokenized_path(ENV_PATHS);
-	
-	built_ins[0] = construct_built_in("exit", built_in_exit);
+	construct_built_in("exit", built_in_exit, built_ins + 0);
 	_puts("\n[0][REG] exit\n");
 	
-	built_ins[1] = construct_built_in("env", built_in_env);
+	construct_built_in("env", built_in_env, built_ins + 1);
 	_puts("[1][REG] env\n");
 	
-	built_ins[2] = construct_built_in("cd", built_in_cd);
+	construct_built_in("cd", built_in_cd, built_ins + 2);
 	_puts("[2][REG] cd\n");
 	
-	built_ins[3] = construct_built_in("clear", built_in_clear);
+	construct_built_in("clear", built_in_clear, built_ins + 3);
 	_puts("[3][REG] clear\n\n");
-
 }
 
+/*
+
+void unreg_built_ins()
+{
+	int i;
+	
+	for (i = 0; i < BUILT_INS_COUNT; ++i)
+	{
+		free(built_ins + i);
+	}
+}
+
+*/
 
 void init() 
 {
 	ENV_PATHS      = allocate_char_grid(BUFF_MAX, BUFF_MAX);
-	ENV_PATHS_SIZE = get_tokenized_path(ENV_PATHS);	
+	ENV_PATHS_SIZE = get_tokenized_path(ENV_PATHS);
 	reg_built_ins();
 }
 
 void deinit() 
 {
-	free_char_grid(ENV_PATHS, ENV_PATHS_SIZE);
+	free_char_grid(ENV_PATHS, BUFF_MAX);
 }
 
 void execute_joined(Command **command_array, int size)
@@ -671,10 +681,13 @@ int execute_command(Command *cmd)
 
 int shell() {
 	int  size = 0;
-	char *buff;
+	
 	int  buff_size = BUFF_MAX;
+	char *buff = malloc(buff_size);
+	
+	
 	EContext ctx = NONE;
-	Command  **command_array;
+	Command  **command_array = alloc_cmds_buffer(COMMAND_MAX);
 
 	init();
 	
@@ -682,7 +695,6 @@ int shell() {
 	{
 		ctx = NONE;
 		size = 0;
-		buff = malloc(buff_size);
 		prompt();
 		
 		size = _getline(buff, &buff_size, stdin);
@@ -692,15 +704,13 @@ int shell() {
 			continue;
 		}
 		
-		command_array = parse_commands(buff, &ctx);
+		size = parse_commands(buff, &ctx, command_array);
 		
-		if(command_array == NULL) 
+		if(size == 0)
 		{
-			free_cmd_grid(command_array);
-			free(buff);
-			continue;
+			continue;	
 		}
-
+		
 		switch(ctx) 
 		{
 			case JOIN: {
@@ -728,10 +738,11 @@ int shell() {
 				break;
 		}
 		
-		free_cmd_grid(command_array);
-		free(buff);	
+		
 	}
-
+	
+	free_cmd_grid(command_array);
+	free(buff);
 	deinit();
 	exit(RUN_FLAG);
 }

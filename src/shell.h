@@ -35,18 +35,18 @@ typedef struct Command {
 } Command;
 
 typedef struct built_in_command {
-	char *name;
+	char  name[16];
 	void (*func)(char **, int);
 } built_in_command;
 
-built_in_command construct_built_in(char *name, void (*func)(char **, int));
-void     built_in_exit(char **args, int count);
-void     built_in_env(char **args, int count);
-void     built_in_cd(char **args, int count);
-int      _exec(Command *cmd);
+void construct_built_in(char *name, void (*func)(char **, int), built_in_command *ptr);
+void built_in_exit(char **args, int count);
+void built_in_env(char **args, int count);
+void built_in_cd(char **args, int count);
+int  _exec(Command *cmd);
 
-Command  **parse_commands(char *buff, EContext *ctx);
-int      parse_command(char *buff, Command *cmd);
+int  parse_commands(char *buff, EContext *ctx, Command **cmd);
+int  parse_command(char *buff, Command *cmd);
 
 
 Command  *alloc_cmd(int cap);
@@ -64,6 +64,7 @@ void     execute_and(Command **command_array, int size);
 int      execute_command(Command *command_array);
 void     init();
 void     deinit();
+void     unreg_built_ins();
 int      shell();
 
 #endif /* _COMMAND_H */

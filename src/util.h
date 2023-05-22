@@ -3,6 +3,8 @@
 
 #include "_string.h"
 
+#define BUG(ID) printf("BUG %s\n", ID);
+
 void prompt();
 char *getpath();
 int  get_tokenized_path(char **paths);

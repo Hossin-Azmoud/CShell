@@ -12,12 +12,11 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
 	#else
 		shell();
 	#endif
-		
+
 	return 0;
 }
 
 void test_unit() 
 {
-	char *s = _strcat("1", "2");
-	printf("%s\n", s);
+	reg_built_ins();
 }
