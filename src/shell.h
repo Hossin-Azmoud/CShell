@@ -12,8 +12,20 @@
 #define MAX_PATH           512
 
 #define CLEAR_BYTES "\033[2J"
+
 #define SEMI_COLON  ";"
 #define ROOT        "/"
+#define AND_SYM     '&'
+#define OR_SYM      '|'
+#define JOIN_SYM    ';'
+
+typedef enum EContext {
+	JOIN, /* ; */	
+	AND, /* && */	
+	OR, /* || */	
+	NONE,
+	CONTEXT_COUNT
+} EContext;
 
 typedef struct Command {
 	char *name;
@@ -33,8 +45,8 @@ void     built_in_env(char **args, int count);
 void     built_in_cd(char **args, int count);
 void     commands_exec(Command *cmd);
 
-Command  **parse_commands(char *buff);
-int parse_command(char *buff, Command *cmd);
+Command  **parse_commands(char *buff, EContext *ctx);
+int      parse_command(char *buff, Command *cmd);
 
 
 Command  *alloc_cmd(int cap);

@@ -420,9 +420,3 @@ int __atoi(char *buff) {
 
 	return n;
 }
-
-
-char  *_strtok(char *str, const char *delim) 
-{
-	assert(0 && "Not implemented!");
-}

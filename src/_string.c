@@ -16,15 +16,17 @@ int _strlen(char *s) {
 char *_strcpy(char *dst, char *src) 
 {
 	
+	int  it = 0;
 	char *dst_start = dst;
 	
-	if(!dst) { 
+	
+	if(!dst) {
 		return NULL;
 	}
 
-	while(*src != '\0')
+	while(src[it] != '\0')
 	{
-		*dst++ = *src++;
+		*dst++ = src[it++];
 	}
 	
 	*dst = '\0';
@@ -99,4 +101,27 @@ char *join(char *dst, char *src, char *delim)
 	dst = _strcat(dst, delim);	
 	dst = _strcat(dst, src);
 	return dst;
+}
+
+
+char *ltrim(char *s)
+{
+    while(isspace(*s)) s++;
+    return s;
+}
+
+char *rtrim(char *s)
+{
+    char* back = s + _strlen(s);
+    
+    while(isspace(*--back));
+    
+    *(back+1) = '\0';
+    
+    return s;
+}
+
+char *trim(char *s)
+{
+    return rtrim(ltrim(s)); 
 }

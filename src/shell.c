@@ -1,11 +1,15 @@
 #include "shell.h"
 
 static built_in_command built_ins[MAX_BUILT_IN_COUNT] = { 0 };
-static int BUILT_INS_COUNT = 0;
-static int COMMAND_MAX     = 5;
+
+static int BUILT_INS_COUNT                            = 0;
+static int COMMAND_MAX                                = 5;
+
+const  char ctx_array[CONTEXT_COUNT] = { ';', '&', '|' };
+
 extern char **environ;
 
-Command *alloc_cmd(int cap) 
+Command *alloc_cmd(int cap)
 {
 	int i;
 	Command *cmd = malloc(sizeof(Command));
@@ -24,7 +28,7 @@ Command *alloc_cmd(int cap)
 	return cmd;
 }
 
-void free_cmd(Command *cmd) 
+void free_cmd(Command *cmd)
 {
 	int i;
 
@@ -93,45 +97,168 @@ void realloc_cmd(Command *cmd)
 	*cmd = *tmp; /* Move tmp to cmd */
 }
 
-Command **parse_commands(char *buff)
-{
-
-	char     *command_buff;
-	int      size = 0;
-	int      it = 0;
-	int      j  = 0;
-	Command  *command_cp;
-	Command  **cmd;
-	char     **tokens;
-	cmd     = alloc_cmds_buffer(COMMAND_MAX);
-	tokens  = allocate_char_grid(COMMAND_MAX, BUFF_MAX);
-
-
-	command_buff = strtok(buff, ";");
-	
-	while(command_buff != NULL) 
+int expect_chr(char found, char expected) /* 1: On sucess, 0: Failed*/
+{	
+	if(found == expected)
 	{
-		
-		if(size + 1 == COMMAND_MAX) 
-		{
-			
-			_fputs("[MEMORY ERROR] Command size reached the limit.\n", STDERR_FILENO);
-			_fputs("[SIZE] ",                                          STDERR_FILENO);
-			_fputi(size,                                               STDERR_FILENO);
-			_fputs("\n",                                               STDERR_FILENO);
-
-			return NULL;
-		}
-		
-
-		_strcpy(tokens[size], command_buff);
-		size++;
-		command_buff = strtok(NULL, ";");
+		return 1;
 	}
 
-
-	tokens[size] = NULL;
+	_fputs("[ ERROR ]: \n", STDERR_FILENO);
+	_fputs("Syntax error, Expected ", STDERR_FILENO);
+	_fputchar(expected, STDERR_FILENO);
+	_fputs(" but found ", STDERR_FILENO);
+	_fputchar(found, STDERR_FILENO);
+	_fputs("\n", STDERR_FILENO);
 	
+	return 0;
+}
+
+Command **parse_commands(char *buff, EContext *ctx)
+{
+	char     *command_buff;
+	
+	int cset        = 0;
+	int cmd_buff_sz = 0;
+	int size        = 0;
+	int it          = 0;
+	int j           = 0;
+	
+	Command  *command_cp;
+	Command  **cmd;
+	
+	char **tokens;
+
+	cmd          = alloc_cmds_buffer(COMMAND_MAX);
+	tokens       = allocate_char_grid(COMMAND_MAX, BUFF_MAX);
+	command_buff = malloc(BUFF_MAX);
+
+	ltrim(buff);
+	
+	while((*buff != '\0') && (*buff != '\n'))
+	{
+		switch(*buff)
+		{
+			case JOIN_SYM: {
+				
+				if(cset && (*ctx != JOIN))
+				{
+					_fputs("[ ERROR ]: \n", STDERR_FILENO);
+					_fputs("Syntax error, Expected ; but found ", STDERR_FILENO);
+					_fputchar(ctx_array[*ctx], STDERR_FILENO);
+					_fputs("\n", STDERR_FILENO);
+					
+					free(command_buff);
+					free_char_grid(tokens, COMMAND_MAX);
+					free_cmd_grid(cmd);
+					
+					return NULL;
+				}
+				
+				buff++;
+				cset = 1;
+				*ctx  = JOIN;
+
+			} break;
+
+			case AND_SYM: {
+				
+				if(cset && (*ctx != AND))
+				{
+
+					_fputs("[ ERROR ]: \n", STDERR_FILENO);
+					_fputs("Syntax error, Expected && but found ", STDERR_FILENO);
+					_fputchar(ctx_array[*ctx], STDERR_FILENO);
+					_fputs("\n", STDERR_FILENO);
+					
+					free(command_buff);
+					free_char_grid(tokens, COMMAND_MAX);
+					free_cmd_grid(cmd);
+
+					return NULL;
+				}
+
+				buff++;
+
+				if(expect_chr(*buff, ctx_array[AND]) == 0)
+				{
+					free(command_buff);
+					free_char_grid(tokens, COMMAND_MAX);
+					free_cmd_grid(cmd);
+					return NULL;
+				};
+
+				buff++;
+				cset  = 1;
+				*ctx  = AND;
+
+			} break;
+
+			case OR_SYM: {
+				
+				if(cset && (*ctx != OR))
+				{
+
+					_fputs("[ ERROR ]: \n", STDERR_FILENO);
+					_fputs("Syntax error, Expected || but found ", STDERR_FILENO);
+					_fputchar(ctx_array[*ctx], STDERR_FILENO);
+					_fputs("\n", STDERR_FILENO);
+					
+					free(command_buff);
+					free_char_grid(tokens, COMMAND_MAX);
+					free_cmd_grid(cmd);
+					return NULL;
+				}
+				
+				buff++;
+
+				if(expect_chr(*buff, ctx_array[OR]) == 0) 
+				{
+					free(command_buff);
+					free_char_grid(tokens, COMMAND_MAX);
+					free_cmd_grid(cmd);
+					return NULL;
+				};
+				
+				buff++;
+				cset  = 1;
+				*ctx  = OR;
+				continue;
+
+			} break;
+			
+			default: {
+				while(*buff && *buff != '&' && *buff != '\0' && *buff != '|' && *buff != ';' && *buff != '\n')
+				{
+					/*TODO: CHeck if the command buffer is enough to hold a new character.?*/
+					command_buff[cmd_buff_sz++] = (char) *buff;
+					buff++;
+				}
+
+				command_buff[cmd_buff_sz] = '\0';
+
+				if(size + 1 == COMMAND_MAX)
+				{
+					_fputs("[MEMORY ERROR] Command size reached the limit.\n", STDERR_FILENO);
+					_fputs("[SIZE] ",                                          STDERR_FILENO);
+					_fputi(size,                                               STDERR_FILENO);
+					_fputs("\n",                                               STDERR_FILENO);
+					free(command_buff);
+					free_cmd_grid(cmd);
+					free_char_grid(tokens, COMMAND_MAX);
+					return NULL;
+				}
+				
+				_strcpy(tokens[size], command_buff);
+				cmd_buff_sz = 0;
+				size++;
+			};
+		}
+
+	 	
+	}
+	
+	tokens[size] = NULL;
 
 	for(it = 0; it < size; it++) 
 	{
@@ -161,7 +288,7 @@ Command **parse_commands(char *buff)
 	cmd[it] = NULL;
 	
 	free_char_grid(tokens, size);
-	
+	free(command_buff);
 	return cmd;
 }
 
@@ -190,7 +317,7 @@ int parse_command(char *buff, Command *cmd)
         	printf("Realloc..\n");
         	realloc_cmd(cmd); /* reallocate another.. */
         }
-        
+
         Token = strtok(NULL, " ");
     }
 
@@ -462,7 +589,7 @@ int shell() {
 	int  run  = 1;
 	int  result = 0;
 	char *buff;
-	
+	EContext ctx = NONE;
 	Command  **command_array;
 
     char **ENV_PATHS    = allocate_char_grid(BUFF_MAX, BUFF_MAX);
@@ -482,7 +609,8 @@ int shell() {
 			continue;
 		}
 		
-		command_array = parse_commands(buff);
+		command_array = parse_commands(buff, &ctx);
+		printf("CONTEXT: (%c)\n", ctx_array[ctx]);
 		
 		if(command_array == NULL) 
 		{
