@@ -1,13 +1,14 @@
 #include "shell.h"
 
 static built_in_command built_ins[MAX_BUILT_IN_COUNT] = { 0 };
-
 static int BUILT_INS_COUNT                            = 0;
 static int COMMAND_MAX                                = 5;
-
 const  char ctx_array[CONTEXT_COUNT] = { ';', '&', '|' };
-
 extern char **environ;
+
+static char **ENV_PATHS    = { 0 };
+static int  ENV_PATHS_SIZE = 0;
+
 
 Command *alloc_cmd(int cap)
 {
@@ -346,12 +347,10 @@ void print_command(Command *c) {
 	_puts("\n");
 }
 
-void commands_exec(Command *cmd) {
+int _exec(Command *cmd) 
+{
 
-	int pid, code = 0;
-	
-	/* signal(SIGQUIT, handle_signal); Sync */
-	
+	int pid, code, stat = 0;
 	pid = fork();
 	
 	if(pid == 0)
@@ -363,13 +362,14 @@ void commands_exec(Command *cmd) {
 		{
 			perror("[ERROR]");
 			_putchar('\n');
-			exit(0);
+			exit(1);
 		}
 
 		exit(0);
 	}
 	
-	wait(NULL);
+    wait(&stat);
+    return (WIFEXITED(stat));
 }
 
 int find_cmd(Command *c, char **paths, int size) {
@@ -567,6 +567,9 @@ built_in_command construct_built_in(char *name, void (*func)(char **, int)) {
 
 void reg_built_ins() {
 	
+	ENV_PATHS      = allocate_char_grid(BUFF_MAX, BUFF_MAX);
+	ENV_PATHS_SIZE = get_tokenized_path(ENV_PATHS);
+	
 	built_ins[0] = construct_built_in("exit", built_in_exit);
 	_puts("\n[0][REG] exit\n");
 	
@@ -582,35 +585,107 @@ void reg_built_ins() {
 }
 
 
+void init() 
+{
+	ENV_PATHS      = allocate_char_grid(BUFF_MAX, BUFF_MAX);
+	ENV_PATHS_SIZE = get_tokenized_path(ENV_PATHS);	
+	reg_built_ins();
+}
+
+void deinit() 
+{
+	free_char_grid(ENV_PATHS, ENV_PATHS_SIZE);
+}
+
+void execute_joined(Command **command_array, int size)
+{
+	int i;
+	
+	for (i = 0; (i < size && command_array[i]); ++i)
+	{
+		execute_command(command_array[i]);
+	}
+}
+
+void execute_and(Command **command_array, int size) {
+	int i, prev_code;
+	
+	for (i = 0; (i < size && command_array[i]); ++i)
+	{
+		prev_code = execute_command(command_array[i]);
+		
+		if(prev_code != 0)
+		{
+			return;
+		}
+	}
+}
+
+
+void execute_or(Command **command_array, int size) {
+	int i, prev_code;
+	
+	for (i = 0; (i < size && command_array[i]); ++i)
+	{
+		prev_code = execute_command(command_array[i]);
+		
+		if(prev_code == 0)
+		{
+			return;
+		}
+	}
+
+}
+
+int execute_command(Command *cmd)
+{
+	int result = exec_builtin(cmd);
+	
+	if(!result) 
+	{
+		if(find_cmd(cmd, ENV_PATHS, ENV_PATHS_SIZE) == 0)
+		{
+			return _exec(cmd);
+		}
+
+		_fputs("\n", STDERR_FILENO);
+		_fputs("ERROR ", STDERR_FILENO);
+		_fputs("[ ", STDERR_FILENO);
+		_fputs(cmd->name, STDERR_FILENO);
+		_fputs(" ]\n", STDERR_FILENO);
+		
+		perror("");
+		
+		_fputs("\n", STDERR_FILENO);
+	}
+
+	return -1; /* Command Not found. */
+}
+
 
 int shell() {
-	int  i    = 0;
 	int  size = 0;
 	int  run  = 1;
-	int  result = 0;
 	char *buff;
 	EContext ctx = NONE;
 	Command  **command_array;
 
-    char **ENV_PATHS    = allocate_char_grid(BUFF_MAX, BUFF_MAX);
-    int  ENV_PATHS_SIZE = get_tokenized_path(ENV_PATHS);
-
-    reg_built_ins();
-
+	init();
+	
 	while(run)  
 	{
 		size = 0;
 		buff = malloc(BUFF_MAX);
 		prompt();
-
+		
 		size = read_command(buff, BUFF_MAX);
+		
 		if(size == 0)
 		{
 			continue;
 		}
 		
 		command_array = parse_commands(buff, &ctx);
-		printf("CONTEXT: (%c)\n", ctx_array[ctx]);
 		
 		if(command_array == NULL) 
 		{
@@ -619,35 +694,41 @@ int shell() {
 			continue;
 		}
 
-		for (i = 0; (i < size && command_array[i]); ++i)
+		switch(ctx) 
 		{
-			result = exec_builtin(command_array[i]);
+
+			case JOIN: {
+				/* Execute the sequence No matter what happens to next and prev commands? */
+				execute_joined(command_array, size);
+			} break;
+
+			case AND: {
+				/* Commands were joined with &&, thus we need to execute sequence in this manner, if the nth - 1 command did not fail we execute nth.*/
+				execute_and(command_array, size);
+			} break;
+
+			case OR: {
+				/* Commands were joined with &&, thus we need to execute sequence in this manner, if the nth - 1 command failed we execute nth.*/
+				execute_or(command_array, size);
+			} break;
+
+			case NONE: {
+				/* No command was Joined so there is only atleast one command to be exectuted. */
+				execute_command(command_array[0]);
+			} break;
 			
-			if(!result) 
-			{
-				if(find_cmd(command_array[i], ENV_PATHS, ENV_PATHS_SIZE) == 0)
-				{
-					commands_exec(command_array[i]);
-					continue;
-				}
-
-				_fputs("\n", STDERR_FILENO);
-				_fputs("ERROR ", STDERR_FILENO);
-				_fputs("[ ", STDERR_FILENO);
-				_fputs(command_array[i]->name, STDERR_FILENO);
-				_fputs(" ]\n", STDERR_FILENO);
-				
-				perror("");
-				
-				_fputs("\n", STDERR_FILENO);
-			}	
+			default:
+				_fputs("Enable to find the parsed context..\n", STDERR_FILENO);
+				break;
 		}
-
+		
 		free_cmd_grid(command_array);
 	}
 
-	free_char_grid(ENV_PATHS, ENV_PATHS_SIZE);
+	deinit();
+	
 	free_cmd_grid(command_array);
 	free(buff);	
+	
 	return 0;
 }

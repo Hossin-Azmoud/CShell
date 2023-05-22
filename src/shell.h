@@ -43,7 +43,7 @@ built_in_command construct_built_in(char *name, void (*func)(char **, int));
 void     built_in_exit(char **args, int count);
 void     built_in_env(char **args, int count);
 void     built_in_cd(char **args, int count);
-void     commands_exec(Command *cmd);
+int      _exec(Command *cmd);
 
 Command  **parse_commands(char *buff, EContext *ctx);
 int      parse_command(char *buff, Command *cmd);
@@ -58,7 +58,12 @@ void     free_command(Command *c);
 void     free_cmd_grid(Command **grid);
 int      exec_builtin(Command *cmd);
 void     reg_built_ins();
-
+void     execute_joined(Command **command_array, int size);
+void     execute_or(Command **command_array, int size);
+void     execute_and(Command **command_array, int size);
+int      execute_command(Command *command_array);
+void     init();
+void     deinit();
 int      shell();
 
 #endif /* _COMMAND_H */
