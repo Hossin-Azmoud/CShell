@@ -2,7 +2,7 @@
 
 static built_in_command built_ins[MAX_BUILT_IN_COUNT] = { 0 };
 static int BUILT_INS_COUNT                            = 0;
-static int COMMAND_MAX                                = 5;
+static int COMMAND_MAX                                = 20;
 const  char ctx_array[CONTEXT_COUNT] = { ';', '&', '|' };
 extern char **environ;
 
@@ -369,7 +369,14 @@ int _exec(Command *cmd)
 	}
 	
     wait(&stat);
-    return (WIFEXITED(stat));
+    
+    if(WIFEXITED(stat)) 
+    {
+        code = WEXITSTATUS(stat);
+        return code;
+    }
+
+    return -2;
 }
 
 int find_cmd(Command *c, char **paths, int size) {
@@ -674,6 +681,7 @@ int shell() {
 	
 	while(run)  
 	{
+		ctx = NONE;
 		size = 0;
 		buff = malloc(BUFF_MAX);
 		prompt();
@@ -699,16 +707,19 @@ int shell() {
 
 			case JOIN: {
 				/* Execute the sequence No matter what happens to next and prev commands? */
+				printf(" JOIN \n");
 				execute_joined(command_array, size);
 			} break;
 
 			case AND: {
 				/* Commands were joined with &&, thus we need to execute sequence in this manner, if the nth - 1 command did not fail we execute nth.*/
+				printf(" AND \n");
 				execute_and(command_array, size);
 			} break;
 
 			case OR: {
 				/* Commands were joined with &&, thus we need to execute sequence in this manner, if the nth - 1 command failed we execute nth.*/
+				printf(" OR \n");
 				execute_or(command_array, size);
 			} break;
 
